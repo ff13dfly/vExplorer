@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>vExplorer</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap/css/bootstrap.min.css" />
+    <script type="text/javascript" charset="utf-8" src="lib/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="app/autoload.js"></script>
+    <script type="text/javascript">
+        $(function() {
+            $('#load_anchor').on('click', function() {
+                var anchor = $('#anchor_name').val();
+                var server = $('#vcache_server').val();
+                if (!anchor || !server) return false;
+                vExplorer(server, anchor, '#v_container');
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <main class="container">
+        <div class="row pt-3">
+            <div class="col-md-5 col-lg-5 col-xs-5">
+                <input type="text" id="vcache_server" name="" class="form-control" value="http://localhost:3322/" placeholder="Input vcache server...">
+            </div>
+            <div class="col-md-5 col-lg-5 col-xs-5">
+                <input type="text" id="anchor_name" name="" class="form-control" value="" placeholder="Input anchor name...">
+            </div>
+            <div class="col-md-2 col-lg-2 col-xs-2 text-end">
+                <button class="btn btn-md btn-primary" id="load_anchor">Load</button>
+            </div>
+        </div>
+    </main>
+    <section class="container gy-4" id="v_container" style="margin-top:20px ">
+    </section>
+</body>
+
+</html>
