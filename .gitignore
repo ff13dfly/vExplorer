@@ -1,2 +1,10 @@
 lib/.DS_Store
 .DS_Store
+build
+node_modules
+
+package-lock.json
+package.json
+
+yarn-error.log
+yarn.lock
