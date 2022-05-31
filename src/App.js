@@ -1,5 +1,5 @@
 import { Navbar, Container, Nav, Row, Col, Modal } from 'react-bootstrap';
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import Search from './pages/search';
 import Account from './pages/account';
@@ -17,23 +17,22 @@ import { encodeAddress } from '@polkadot/util-crypto';
 
 //import $ from 'jquery';
 
-let wsAPI = null;     
-
+let wsAPI = null;
 function App(props) {
-    //const server='ws://localhost:9944';
-    const server='wss://network.metanchor.net';
+    const server = 'ws://localhost:9944';
+    //const server='wss://network.metanchor.net';
 
     const keys = {
         jsonFile: 'js_file_name',
         anchorList: 'anchor_list',
-        rpcEndpoint:'rpc.php',
+        rpcEndpoint: 'rpc.php',
     }
 
-    const filter={'0x1d00':true,'0x1d02':true}      //前者是新建的setAnchor，后者是sellAnchor
-    const tools={
-        shortenAddress:(address,n)=>{
-            if(n===undefined) n=10;
-            return address.substr(0,n)+'...'+address.substr(address.length-n,n);
+    const filter = { '0x1d00': true, '0x1d02': true } //前者是新建的setAnchor，后者是sellAnchor
+    const tools = {
+        shortenAddress: (address, n) => {
+            if (n === undefined) n = 10;
+            return address.substr(0, n) + '...' + address.substr(address.length - n, n);
         },
         u8toString: (arr) => {
             let str = '0x';
@@ -57,41 +56,41 @@ function App(props) {
             }
             return resultStr.join("");
         },
-        hex2ab:(hex)=>{
-          const typedArray = new Uint8Array(hex.match(/[\da-f]{2}/gi).map(function (h) {
-            return parseInt(h, 16)
-          }));
-          return typedArray.buffer;
+        hex2ab: (hex) => {
+            const typedArray = new Uint8Array(hex.match(/[\da-f]{2}/gi).map(function (h) {
+                return parseInt(h, 16)
+            }));
+            return typedArray.buffer;
         },
     }
 
-    const API={
+    const API = {
         link: (server, ck) => {
-            if(wsAPI===null){
+            if (wsAPI === null) {
                 const wsProvider = new WsProvider(server);
                 ApiPromise.create({ provider: wsProvider }).then((api) => {
                     wsAPI = api;
                     ck && ck();
                 });
-            }else{
+            } else {
                 ck && ck();
             }
         },
-        listening:(ck)=>{
+        listening: (ck) => {
             wsAPI.rpc.chain.subscribeFinalizedHeads((lastHeader) => {
                 const lastHash = lastHeader.hash.toHex();
                 wsAPI.rpc.chain.getBlock(lastHash).then((dt) => {
                     const ans = API.filterAnchor(dt, filter);
-                    const list=[];
+                    const list = [];
                     for (let i = 0; i < ans.length; i++) {
                         const row = ans[i];
                         const account = row.signature.signer.id;
                         const key = tools.hex2str(row.method.args.key);
                         const adata = row.method.args;
                         const obj = {
-                            block:lastHeader.number,
-                            account:account,
-                            anchor:key,
+                            block: lastHeader.number,
+                            account: account,
+                            anchor: key,
                             raw: adata.raw,
                             protocol: JSON.parse(tools.hex2str(adata.protocol)),
                         }
@@ -102,42 +101,42 @@ function App(props) {
             });
         },
         getBalance: (account, ck) => {
-            wsAPI.query.system.account(account, (res) => {               
+            wsAPI.query.system.account(account, (res) => {
                 ck && ck(res);
             })
         },
-        anchorToSell: (pair, anchor, cost,ck) => {
+        anchorToSell: (pair, anchor, cost, ck) => {
             wsAPI.tx.anchor.sellAnchor(anchor, cost).signAndSend(pair, (res) => {
                 ck && ck(res);
             });
         },
-        getSellList:(ck)=>{
-            wsAPI.query.anchor.sellList.entries().then((arr)=>{
+        getSellList: (ck) => {
+            wsAPI.query.anchor.sellList.entries().then((arr) => {
                 ck && ck(arr);
             });
         },
-        buyAnchor: (pair, anchor,ck) => {
+        buyAnchor: (pair, anchor, ck) => {
             if (!anchor) return false;
-            self.isSelling(anchor,(menu)=>{
-                if(menu.owner===0){
+            self.isSelling(anchor, (menu) => {
+                if (menu.owner === 0) {
                     const protocol = { "type": "data" };
                     wsAPI.tx.anchor.setAnchor(anchor, 'Anchor created.', JSON.stringify(protocol)).signAndSend(pair, (result) => {
                         ck && ck(result);
                     });
-                }else{
+                } else {
                     wsAPI.tx.anchor.buyAnchor(anchor).signAndSend(pair, (result) => {
                         ck && ck(result);
                     });
                 }
             });
         },
-        rewriteAnchor:(pair,anchor,data,ck) => {
+        rewriteAnchor: (pair, anchor, data, ck) => {
             wsAPI.tx.anchor.setAnchor(anchor, data.raw, data.protocol).signAndSend(pair, (result) => {
                 ck && ck(result);
             });
         },
         search: (anchor, ck) => {
-            API.link(server,()=>{
+            API.link(server, () => {
                 wsAPI.query.anchor.anchorOwner(anchor, (res) => {
                     if (res.isEmpty) {
                         ck && ck({ owner: 0, blocknumber: 0, anchor: anchor });
@@ -146,7 +145,7 @@ function App(props) {
                         const block = res.value[1].words[0];
                         let result = { owner: owner, blocknumber: block, anchor: anchor };
                         wsAPI.query.anchor.sellList(anchor, (dt) => {
-                            if(dt.value.isEmpty ) return ck && ck(result);
+                            if (dt.value.isEmpty) return ck && ck(result);
                             const cost = dt.value[1].words[0];
                             result.cost = cost;
                             ck && ck(result);
@@ -154,10 +153,10 @@ function App(props) {
                     }
                 });
             });
-            
+
         },
         viewAnchor: (block, name, owner, ck) => {
-             wsAPI.rpc.chain.getBlockHash(block, (res) => {
+            wsAPI.rpc.chain.getBlockHash(block, (res) => {
                 const hash = res.toHex();
                 if (!hash) return ck && ck(false);
                 wsAPI.rpc.chain.getBlock(hash).then((dt) => {
@@ -185,8 +184,8 @@ function App(props) {
             let arr = [];
             dt.block.extrinsics.forEach((ex, index) => {
                 //console.log(self.u8toString(ex.method.callIndex));
-                if(index !== 0){
-                    const key=tools.u8toString(ex.method.callIndex);
+                if (index !== 0) {
+                    const key = tools.u8toString(ex.method.callIndex);
                     if (filter[key]) arr.push(JSON.parse(ex.toString()));
                 }
             });
@@ -200,18 +199,18 @@ function App(props) {
         },
     }
 
-    const agent={
+    const agent = {
         search: API.search,
-        view:   API.viewAnchor,
-        write:  API.rewriteAnchor,
+        view: API.viewAnchor,
+        write: API.rewriteAnchor,
         subscribe: API.listening,
         tools: tools,
     }
 
-    let cur='home';
+    let cur = 'home';
     const self = {
         /*路由响应部分的方法，获取不同的页面ss*/
-        router:()=>{
+        router: () => {
             self.getDom(cur);
         },
         clean: () => {
@@ -222,54 +221,63 @@ function App(props) {
             self.clean();
             switch (router) {
                 case 'home':
-                    setMarket((<ListSell wsAPI = { wsAPI }  buy={self.buy} tools={tools} />));
-                    setDom(( < Search onCheck = { (name) => { self.anchorCheck(name) }} />));
-                break;
+                    setMarket((< ListSell wsAPI={wsAPI}
+                        buy={self.buy}
+                        tools={tools}
+                    />));
+                    setDom((< Search onCheck={
+                        (name) => { self.anchorCheck(name) }}
+                    />));
+                    break;
 
                 case 'docs':
-                    setMarket('');
-                    setDom(( < Docs / > ));
-                break;
+                    setMarket(''); setDom((< Docs />));
+                    break;
 
                 case 'anchor':
-                    setMarket('');
-                    setDom(( < Anchor keys = { keys } onCheck = { self.isOwner } onSell = { self.anchorSell } onUpdate = { self.anchorUpdate } tools={tools} />));
-                break;
+                    setMarket(''); setDom((< Anchor keys={keys}
+                        onCheck={self.isOwner}
+                        onSell={self.anchorSell}
+                        onUpdate={self.anchorUpdate}
+                        tools={tools} />));
+                    break;
 
                 case 'account':
                     setMarket('');
-                    setDom(( < Account keys = { keys } onCheck = {(name) => { self.anchorCheck(name) }} balance = { API.getBalance } />));
-                break;
+                    setDom((< Account keys={keys}
+                        onCheck={(name) => { self.anchorCheck(name) }} balance={API.getBalance}
+                    />));
+                    break;
 
                 default:
-                    setMarket('');
-                    setDom(( < Search onCheck = {(name) => { self.anchorCheck(name) }} />));
-                break;
+                    setMarket(''); setDom((< Search onCheck={(name) => { self.anchorCheck(name) }} />));
+                    break;
             }
         },
-        anchorUpdate:(anchor)=>{
+        anchorUpdate: (anchor) => {
             //console.log('call self.anchorUpdate');
             self.isOwner(anchor, (res) => {
                 if (res === false) return false;
 
                 const k = keys.jsonFile;
 
-                setContent(( < Sign 
-                    accountKey = { k } 
-                    callback = {
-                        (pair,name,ext) => {
+                setContent((< Sign accountKey={k}
+                    callback={
+                        (pair, name, ext) => {
                             console.log('call Sign callback');
-                            API.rewriteAnchor(pair, name, ext, (res)=>{
+                            API.rewriteAnchor(pair, name, ext, (res) => {
                                 //会返回3次结果，最后一次的isFinalized为true才是写入到了链里   
                                 self.handleClose();
                             });
                         }
-                    } 
-                    anchor = { anchor } 
-                    extend ={ {protocol:JSON.stringify({"type":"data"}),raw:''} } />)
+                    }
+                    anchor={anchor}
+                    extend={
+                        { protocol: JSON.stringify({ "type": "data" }), raw: '' }}
+                />)
                 );
 
-                setTitle(( < span > Anchor name: < span className = "text-warning" > { anchor } < /span></span > ));
+                setTitle((< span className="text-warning" > {anchor} </span>));
                 self.handleShow();
             });
         },
@@ -278,79 +286,82 @@ function App(props) {
             self.isOwner(anchor, (res) => {
                 if (res === false) return false;
                 const k = keys.jsonFile;
-                setContent(( < Sign 
-                    accountKey = { k } 
-                    callback = {
-                        (pair,name,ext) => {
-                            API.anchorToSell(pair, name, ext.sell,(res)=>{
+                setContent((< Sign accountKey={k}
+                    callback={
+                        (pair, name, ext) => {
+                            API.anchorToSell(pair, name, ext.sell, (res) => {
                                 self.handleClose();
                             });
                         }
-                    } 
-                    anchor = { anchor }
-                    extend ={{sell:200}} />)
-                );
-                setTitle(( < span > Anchor name: < span className = "text-warning" > { anchor } < /span></span > ));
-                self.handleShow();
+                    }
+                    anchor={anchor}
+                    extend={
+                        { sell: 200 }}
+                />)
+                ); setTitle((< span className="text-warning" > {anchor} </span>)); self.handleShow();
             });
         },
-        buy:(anchor,cost)=>{
+        buy: (anchor, cost) => {
             //console.log('target:'+anchor+',cost:'+cost);
 
             const address = API.getAddress();
-            if(address===false) return false;       //用户未登录的情况
+            if (address === false) return false; //用户未登录的情况
 
             //1.检查anchor是否处于销售状态；
-            self.isSelling(anchor,(menu)=>{
+            self.isSelling(anchor, (menu) => {
                 //console.log(res);
-                if(menu.cost!==cost) return false;
+                if (menu.cost !== cost) return false;
 
                 //2.检查用户的balance;
-                API.getBalance(address,(res)=>{
+                API.getBalance(address, (res) => {
                     console.log(res.data.free);
                     console.log(res.data.free.toString());
                     console.log(res.data.free.toBigInt());
                 });
 
                 //3.实现anchor的购买
-                self.initAnchor(anchor,(dt)=>{
+                self.initAnchor(anchor, (dt) => {
                     console.log(dt);
                 });
             });
         },
         anchorCheck: (anchor) => {
-            if(!anchor){
+            if (!anchor) {
                 setResult('');
-                setMarket((<ListSell wsAPI = { wsAPI } buy={self.buy} tools={tools} />));
+                setMarket((< ListSell wsAPI={wsAPI}
+                    buy={self.buy}
+                    tools={tools}
+                />));
                 return false;
             }
 
-            setMarket('');
-            API.search(anchor, self.optAnchorResult);
+            setMarket(''); API.search(anchor, self.optAnchorResult);
         },
         optAnchorResult: (dt) => {
             if (dt.owner === 0) {
-                setResult( < Buy anchor = { dt.anchor } setAnchor = { self.initAnchor } />);
+                setResult(< Buy anchor={dt.anchor}
+                    setAnchor={self.initAnchor}
+                />);
                 setOnsell('');
-            }else {
-                const name=dt.anchor;
-                const owner=dt.owner;
-                const block=dt.blocknumber;
-                      
-                API.viewAnchor(block,name,owner,(res)=>{
-                    if(!res.protocol){
-                        setResult(<Error data='No data to show.'/>);
-                    }else{
-                        setResult( < Detail  
-                            anchor={name}  
-                            raw={res.raw} 
-                            protocol={res.protocol} 
-                            owner={dt.owner} 
-                            block={block} 
-                            link={wsAPI} 
+            }
+            else {
+                const name = dt.anchor;
+                const owner = dt.owner;
+                const block = dt.blocknumber;
+
+                API.viewAnchor(block, name, owner, (res) => {
+                    if (!res.protocol) {
+                        setResult(< Error data='No data to show.' />);
+                    } else {
+                        setResult(< Detail anchor={name}
+                            raw={res.raw}
+                            protocol={res.protocol}
+                            owner={dt.owner}
+                            block={block}
+                            link={wsAPI}
                             tools={tools}
                             agent={agent}
-                        />);  
+                        />);
                     }
                 });
             }
@@ -358,7 +369,7 @@ function App(props) {
         buyTarget: (anchor) => {
 
         },
-        isSelling:(anchor,ck)=>{
+        isSelling: (anchor, ck) => {
             API.search(anchor, (dt) => {
                 ck && ck(dt);
             });
@@ -366,7 +377,7 @@ function App(props) {
         isOwner: (anchor, ck) => {
             const address = API.getAddress();
             if (!address) return ck && ck(false);
-             API.search(anchor, (dt) => {
+            API.search(anchor, (dt) => {
                 ck && ck(dt.owner === address ? dt : false);
             });
         },
@@ -376,20 +387,18 @@ function App(props) {
                 return ck && ck(false);
             } else {
                 setContent(
-                    ( < Sign 
-                        accountKey = { k } 
-                        callback = {
-                            (pair,name)=>{
-                                API.buyAnchor(pair,name,(res)=>{
+                    (< Sign accountKey={k}
+                        callback={
+                            (pair, name) => {
+                                API.buyAnchor(pair, name, (res) => {
                                     self.handleClose();
                                 });
                             }
-                        } 
-                        anchor = { anchor }
+                        }
+                        anchor={anchor}
                     />)
                 );
-                setTitle(( < span > Anchor name: < span className = "text-warning" > { anchor } < /span></span > ));
-                self.handleShow();
+                setTitle((<span className="text-warning" > {anchor}</span>)); self.handleShow();
             }
         },
 
@@ -401,17 +410,23 @@ function App(props) {
         },
     }
 
-    let [dom, setDom] = useState(( < Search wsAPI = { wsAPI } onCheck = { self.anchorCheck } />));
+    let [dom, setDom] = useState((< Search wsAPI={wsAPI}
+        onCheck={self.anchorCheck}
+    />));
     let [result, setResult] = useState('');
     let [show, setShow] = useState(false);
     let [title, setTitle] = useState('');
     let [content, setContent] = useState('');
     let [onsell, setOnsell] = useState('');
-    let [market, setMarket] = useState(<Error data={'Linking to '+server+'...'}/>);
+    let [market, setMarket] = useState(< Error data={'Linking to ' + server + '...'}
+    />);
 
     useEffect(() => {
-        API.link(server,()=>{
-            setMarket((<ListSell wsAPI = { wsAPI } buy={self.buy} tools={tools} />));
+        API.link(server, () => {
+            setMarket((< ListSell wsAPI={wsAPI}
+                buy={self.buy}
+                tools={tools}
+            />));
 
             // API.listening((ans)=>{
             //     console.log(ans)
@@ -419,47 +434,56 @@ function App(props) {
         });
 
 
-    },[]);
+    }, []);
 
 
-    return ( <Row ><Navbar bg = "light" expand = "lg" >
-            <Container >
-            <Navbar.Brand href = "#home" > Meta Anchor < /Navbar.Brand> 
-                <Navbar.Toggle aria-controls = "basic-navbar-nav" / >
-                    <Navbar.Collapse id = "basic-navbar-nav" >
-                    <Nav className = "me-auto" >
-                        <Nav.Link href = "#home" onClick = { ()=>{
-                            cur='home';
+    return (<Container>
+        <Navbar bg="light" expand="lg">
+        <Container >
+            <Navbar.Brand href="#home" > Meta Anchor </Navbar.Brand>
+            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+            <Navbar.Collapse id="basic-navbar-nav">
+                <Nav className="me-auto" >
+                    <Nav.Link href="#home" onClick={
+                        () => {
+                            cur = 'home';
                             self.router();
-                        } } > Home </ Nav.Link> 
-                        <Nav.Link href = "#anchor" onClick = { ()=>{
-                            cur='anchor';
-                            self.router();
-                        }}> Anchors </ Nav.Link> 
-                        <Nav.Link href = "#docs" onClick = { ()=>{
-                            cur='docs';
-                            self.router();
-                        } } > Docs </ Nav.Link> 
-                        <Nav.Link href = "#account"  onClick = { ()=>{
-                            cur='account';
-                            self.router();
-                        } } > Account </ Nav.Link>
-                    </Nav>
-                </Navbar.Collapse>
-            </Container> 
-        </Navbar> 
-        <Col lg = { 12 } xs = { 12 } className = "pt-2" > { dom } < /Col>
-        <Col lg = { 12 } xs = { 12 } className = "pt-2" > { result } </Col>
-        <Col lg = { 12 } xs = { 12 } className = "pt-2 text-center" > { onsell} </Col>
-        <Col lg = { 12 } xs = { 12 } className = "pt-2" > {market}</Col>
-
-        <Modal show = { show } onHide = { self.handleClose }>
+                        }
+                    } > Home </Nav.Link><Nav.Link href="#anchor"
+                        onClick={
+                            () => {
+                                cur = 'anchor';
+                                self.router();
+                            }
+                        } > Anchors </ Nav.Link>
+                    <Nav.Link href="#docs"
+                        onClick={
+                            () => {
+                                cur = 'docs';
+                                self.router();
+                            }
+                        } > Docs </Nav.Link>
+                    <Nav.Link href="#account"
+                        onClick={
+                            () => {
+                                cur = 'account';
+                                self.router();
+                            }
+                        } > Account </Nav.Link>
+                </Nav> </Navbar.Collapse> </Container> </Navbar>
+        <Row>
+        <Col lg={12} xs={12} className="pt-2"> {dom} </Col>
+        <Col lg={12} xs={12} className="pt-2"> {result}</Col>
+        <Col lg={12} xs={12} className="pt-2 text-center" > {onsell} </Col>
+        <Col lg={12} xs={12} className="pt-2" >{market} </Col>
+        </Row>
+        <Modal show={show} onHide={self.handleClose} >
             <Modal.Header closeButton>
-                <Modal.Title > { title } < /Modal.Title>
+                <Modal.Title > {title} </Modal.Title>
             </Modal.Header>
-            <Modal.Body > { content } < /Modal.Body>
+        <Modal.Body >{content}</Modal.Body>
         </Modal>
-        </Row>);
+    </Container>);
 }
 
 export default App;

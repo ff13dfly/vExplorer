@@ -21,7 +21,7 @@ function AnchorApp(props) {
         <Row className = "pt-2" >
             <Col lg = { 12 } xs = { 12 } id="app_container">Anchor application will render here...</Col>
             <Col lg = { 12 } xs = { 12 }><p style={cls}>App Owner:{props.owner}</p></Col>
-        < /Row>
+        </Row>
     );
 }
 
