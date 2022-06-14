@@ -37,7 +37,8 @@ function Detail(props) {
         anchor={name} 
         raw={raw} 
         owner={owner} 
-        block={block} 
+        block={block}
+        protocol={props.protocol}
         link={props.link} 
         tools={props.tools} 
         agent={props.agent}/>

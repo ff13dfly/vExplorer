@@ -70,6 +70,10 @@ function App(props) {
                 const wsProvider = new WsProvider(server);
                 ApiPromise.create({ provider: wsProvider }).then((api) => {
                     wsAPI = api;
+                    // console.log(wsAPI.events.anchor.AnchorSet);
+                    // wsAPI.events.anchor.AnchorSet.is((account,n)=>{
+                    //     console.log(account);
+                    // });
                     ck && ck();
                 });
             } else {
@@ -437,7 +441,7 @@ function App(props) {
     }, []);
 
 
-    return (<Container>
+    return (<div>
         <Navbar bg="light" expand="lg">
         <Container >
             <Navbar.Brand href="#home" > Meta Anchor </Navbar.Brand>
@@ -483,7 +487,7 @@ function App(props) {
             </Modal.Header>
         <Modal.Body >{content}</Modal.Body>
         </Modal>
-    </Container>);
+    </div>);
 }
 
 export default App;
