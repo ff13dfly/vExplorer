@@ -74,7 +74,7 @@ function AnchorApp(props) {
         }else{
             const str=props.tools.hex2str(props.raw);
             console.log(str);
-            var anchorApp=new Function("agent", "con", "jquery", str);
+            const anchorApp=new Function("agent", "con", "jquery", str);
             //console.log(anchorApp);
             anchorApp(props.agent,'#app_container',$);
         }
