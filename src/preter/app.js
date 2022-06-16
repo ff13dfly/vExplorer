@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Row,Col } from 'react-bootstrap';
-//import $ from 'jquery';
 
 function AnchorApp(props) {
     //console.log(props);
@@ -74,9 +73,11 @@ function AnchorApp(props) {
     }
 
     useEffect(() => {
-        self.loadLib([]);
+        //self.loadLib([]);
         const str=props.tools.hex2str(props.raw);
-        const cApp=new Function("agent", "con", "jquery", str);
+        const cApp=new Function("agent", "con", str);
+        if(!cApp) return false;
+        
         if(props.protocol && props.protocol.lib){
             self.loadLib(props.protocol.lib,()=>{
                 cApp(props.agent,'#app_container');
