@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Row,Col } from 'react-bootstrap';
-import $ from 'jquery';
+//import $ from 'jquery';
 
 function AnchorApp(props) {
     //console.log(props);
@@ -45,38 +45,44 @@ function AnchorApp(props) {
             });
         },
         loadLib:(list,ck)=>{
+            const scp = document.createElement('script');
+            scp.type = 'text/javascript';
+            scp.crossOrigin = 'anonymous';
+            let txt='';
             self.getLibs(list,(dt)=>{
                 const len=list.length;
-                // for(let i=0;i<len;i++){
-                //     const row=list[i];
-                //     console.log(row);
-                //     if(Array.isArray(row)){
-                //         //console.log(dt[row[0]]);
-                //         //eval(dt[row[0]]);
-                //     }else{
-                //         //console.log(dt[row]);
-                //         //eval(dt[row]);
-                //     }
-                // }
+                for(let i=0;i<len;i++){
+                    const row=list[i];
+                    console.log(row);
+                    if(Array.isArray(row)){
+                        txt+=dt[row[0]];
+                    }else{
+                        txt+=dt[row]
+                    }
+                }
+
+                scp.text=txt;
+                console.log(scp);
+                if (document.head.append) {
+                    document.head.append(scp);
+                } else {
+                    document.getElementsByTagName('head')[0].appendChild(scp);
+                }
                 ck && ck();
             });
         },
     }
 
-    let anchorApp;
     useEffect(() => {
+        self.loadLib([]);
+        const str=props.tools.hex2str(props.raw);
+        const cApp=new Function("agent", "con", "jquery", str);
         if(props.protocol && props.protocol.lib){
-            // self.loadLib(props.protocol.lib,()=>{
-            //     const str=props.tools.hex2str(props.raw);
-            //     var anchorApp=new Function(str);
-            //     anchorApp(props.agent,'#app_container',$);
-            // });
+            self.loadLib(props.protocol.lib,()=>{
+                cApp(props.agent,'#app_container');
+            });
         }else{
-            const str=props.tools.hex2str(props.raw);
-            console.log(str);
-            const anchorApp=new Function("agent", "con", "jquery", str);
-            //console.log(anchorApp);
-            anchorApp(props.agent,'#app_container',$);
+            cApp(props.agent,'#app_container');
         }
         
     });
@@ -85,10 +91,13 @@ function AnchorApp(props) {
         "wordWrap": "break-word",
     }
 
+    const shorten=props.agent.tools.shortenAddress;
+    const owner=shorten(props.owner,10);
+
     return ( 
         <Row className = "pt-2" >
             <Col lg = { 12 } xs = { 12 } id="app_container">Anchor application will render here...</Col>
-            <Col lg = { 12 } xs = { 12 }><p style={cls}>App Owner:{props.owner}</p></Col>
+            <Col lg = { 12 } xs = { 12 }><p style={cls}>cApp Owner : {owner}</p></Col>
         </Row>
     );
 }
