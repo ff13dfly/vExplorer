@@ -36,11 +36,9 @@ function Sign(props) {
     		//console.log('call sign.vertify');
     		const pair=self.checkPassword();
     		if(pair===false){
-				//setPassword('');
+				
     		}else{
-    			//setPassword('');
     			props.callback(pair,props.anchor,props.extend);
-    			//props.close();
     		}
     	},
     	changeExtend:(ev,dt)=>{

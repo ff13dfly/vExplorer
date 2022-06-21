@@ -204,14 +204,24 @@ function App(props) {
             const acc = str === null ? false : JSON.parse(str);
             return acc === false ? false : acc.address;
         },
-        vertify:(anchor,raw,protocol)=>{
+
+        // rewriteAnchor: (pair, anchor, data, ck) => {
+        //     wsAPI.tx.anchor.setAnchor(anchor, data.raw, data.protocol).signAndSend(pair, (result) => {
+        //         ck && ck(result);
+        //     });
+        // },
+        vertify:(anchor,raw,protocol,ck)=>{
             const k = keys.jsonFile;
             setContent(
                 (< Sign accountKey={k}
                     callback={
-                        (pair, name) => {
-                            console.log('ready to write anchor');
-                            console.log(name);
+                        (pair, name , ext) => {
+                            console.log(ext);
+                            const data={raw:raw,protocol:protocol}
+                            API.rewriteAnchor(pair,anchor,data,(res)=>{
+                                setShow(false);
+                                ck && ck(res);
+                            })
                         }
                     }
                     anchor={anchor}
@@ -288,7 +298,7 @@ function App(props) {
                 setContent((< Sign accountKey={k}
                     callback={
                         (pair, name, ext) => {
-                            console.log('call Sign callback');
+                            //console.log('call Sign callback');
                             API.rewriteAnchor(pair, name, ext, (res) => {
                                 //会返回3次结果，最后一次的isFinalized为true才是写入到了链里   
                                 self.handleClose();
