@@ -64,6 +64,9 @@ function App(props) {
         },
     }
 
+    let [content, setContent] = useState('');
+    let [show, setShow] = useState(false);
+
     const API = {
         link: (server, ck) => {
             if (wsAPI === null) {
@@ -201,6 +204,22 @@ function App(props) {
             const acc = str === null ? false : JSON.parse(str);
             return acc === false ? false : acc.address;
         },
+        vertify:(anchor,raw,protocol)=>{
+            const k = keys.jsonFile;
+            console.log(k);
+            setContent(
+                (< Sign accountKey={k}
+                    callback={
+                        (pair, name) => {
+                            console.log(name);
+                        }
+                    }
+                    anchor={anchor}
+                />)
+            );
+            setTitle((<span className="text-warning" > {anchor}</span>));
+            setShow(true);
+        }
     }
 
     const agent = {
@@ -208,6 +227,7 @@ function App(props) {
         view: API.viewAnchor,
         write: API.rewriteAnchor,
         subscribe: API.listening,
+        vertify:API.vertify,
         tools: tools,
     }
 
@@ -347,8 +367,7 @@ function App(props) {
                     setAnchor={self.initAnchor}
                 />);
                 setOnsell('');
-            }
-            else {
+            }else{
                 const name = dt.anchor;
                 const owner = dt.owner;
                 const block = dt.blocknumber;
@@ -414,30 +433,18 @@ function App(props) {
         },
     }
 
-    let [dom, setDom] = useState((< Search wsAPI={wsAPI}
-        onCheck={self.anchorCheck}
-    />));
+    let [dom, setDom] = useState((< Search wsAPI={wsAPI} onCheck={self.anchorCheck}/>));
     let [result, setResult] = useState('');
-    let [show, setShow] = useState(false);
+
     let [title, setTitle] = useState('');
-    let [content, setContent] = useState('');
+
     let [onsell, setOnsell] = useState('');
-    let [market, setMarket] = useState(< Error data={'Linking to ' + server + '...'}
-    />);
+    let [market, setMarket] = useState(< Error data={'Linking to ' + server + '...'}/>);
 
     useEffect(() => {
         API.link(server, () => {
-            setMarket((< ListSell wsAPI={wsAPI}
-                buy={self.buy}
-                tools={tools}
-            />));
-
-            // API.listening((ans)=>{
-            //     console.log(ans)
-            // });
+            setMarket((< ListSell wsAPI={wsAPI} buy={self.buy} tools={tools} />));
         });
-
-
     }, []);
 
 

@@ -6,6 +6,9 @@ import { Keyring } from '@polkadot/api';
 import { useState,useEffect } from 'react';
 
 function Sign(props) {
+	console.log('Sign dialog');
+	console.log(props);
+	
 	const k=props.accountKey;
 	const dt=localStorage.getItem(k);
 	const acc=JSON.parse(dt);
@@ -30,8 +33,7 @@ function Sign(props) {
 	        }
     	},
     	vertify:()=>{
-    		console.log('call sign.vertify');
-
+    		//console.log('call sign.vertify');
     		const pair=self.checkPassword();
     		if(pair===false){
 				//setPassword('');
