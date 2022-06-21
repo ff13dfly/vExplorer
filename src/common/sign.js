@@ -6,8 +6,8 @@ import { Keyring } from '@polkadot/api';
 import { useState,useEffect } from 'react';
 
 function Sign(props) {
-	console.log('Sign dialog');
-	console.log(props);
+	//console.log('Sign dialog');
+	//console.log(props);
 	
 	const k=props.accountKey;
 	const dt=localStorage.getItem(k);

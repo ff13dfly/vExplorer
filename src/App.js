@@ -206,11 +206,11 @@ function App(props) {
         },
         vertify:(anchor,raw,protocol)=>{
             const k = keys.jsonFile;
-            console.log(k);
             setContent(
                 (< Sign accountKey={k}
                     callback={
                         (pair, name) => {
+                            console.log('ready to write anchor');
                             console.log(name);
                         }
                     }

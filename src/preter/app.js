@@ -52,7 +52,6 @@ function AnchorApp(props) {
                 const len=list.length;
                 for(let i=0;i<len;i++){
                     const row=list[i];
-                    console.log(row);
                     if(Array.isArray(row)){
                         txt+=dt[row[0]];
                     }else{
@@ -61,7 +60,6 @@ function AnchorApp(props) {
                 }
 
                 scp.text=txt;
-                console.log(scp);
                 if (document.head.append) {
                     document.head.append(scp);
                 } else {
