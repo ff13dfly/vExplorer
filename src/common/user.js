@@ -14,7 +14,10 @@ function User(props) {
     remove:()=>{
       localStorage.removeItem(props.storageKey);
       props.fresh();      //父组件传过来的
-    }
+    },
+    charge:()=>{
+      console.log('ready to call vGateway');
+    },
   }
 
   const fa=localStorage.getItem(props.storageKey);
@@ -39,8 +42,10 @@ function User(props) {
       <Col lg = { 7 } xs = { 7 } className = "pt-2 text-end" >
         <Button size = "sm" variant = "danger" onClick = { self.remove } > Remove </Button>{' '}
       </Col> 
-      <Col lg = { 12 } xs = { 12 } className = "pt-2" ><p className="text-justify" style={cls}>{account.address}</p></Col>
-      
+      <Col lg = { 9 } xs = { 9 } className = "pt-2" ><p className="text-justify" style={cls}>{account.address}</p></Col>
+      <Col lg = { 3 } xs = { 3 } className = "pt-2  text-end" >
+        <Button size = "sm" variant = "primary" onClick = { self.charge } > Charge </Button>{' '}
+      </Col>
     </Row>
   );
 }
