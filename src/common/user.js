@@ -42,9 +42,9 @@ function User(props) {
       <Col lg = { 7 } xs = { 7 } className = "pt-2 text-end" >
         <Button size = "sm" variant = "danger" onClick = { self.remove } > Remove </Button>{' '}
       </Col> 
-      <Col lg = { 9 } xs = { 9 } className = "pt-2" ><p className="text-justify" style={cls}>{account.address}</p></Col>
-      <Col lg = { 3 } xs = { 3 } className = "pt-2  text-end" >
-        <Button size = "sm" variant = "primary" onClick = { self.charge } > Charge </Button>{' '}
+      <Col lg = { 8 } xs = { 8 } className = "text-start" ><p className="text-justify" style={cls}>{account.address}</p></Col>
+      <Col lg = { 4 } xs = { 4 } className = "text-end" >
+        <Button size = "lg" variant = "primary" onClick = { self.charge } > Charge </Button>{' '}
       </Col>
     </Row>
   );

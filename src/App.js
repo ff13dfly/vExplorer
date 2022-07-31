@@ -11,7 +11,7 @@ import Sign from './common/sign';
 import ListSell from './common/listSell';
 import Error from './common/error';
 
-import { ApiPromise, WsProvider } from '@polkadot/api';
+import { ApiPromise, WsProvider,Keyring } from '@polkadot/api';
 //import { stringToU8a } from '@polkadot/util'
 import { encodeAddress } from '@polkadot/util-crypto';
 
@@ -229,7 +229,7 @@ function App(props) {
             );
             setTitle((<span className="text-warning" > {anchor}</span>));
             setShow(true);
-        }
+        },
     }
 
     const agent = {
@@ -441,6 +441,41 @@ function App(props) {
         handleShow: () => {
             setShow(true);
         },
+
+        test_unsub:function(){
+
+            setTimeout(() => {
+                let unsub=null;
+                const keyring = new Keyring({type: 'sr25519'});
+                const alice = keyring.addFromUri('//Alice');
+                const anchor='test_sub';
+                wsAPI.tx.anchor.setAnchor(anchor,'hello sub',JSON.stringify({type:"data"})).signAndSend(alice,(res) => {
+                    var status=res.status;
+                    console.log(`Writing status is ${status.type}`);
+                    console.log('Status:'+JSON.stringify(status)+',type:'+status.type);
+                    if(status.type==='Finalized'){
+
+                        wsAPI.query.anchor.anchorOwner(anchor, (dt) => {
+                            const block = dt.value[1].words[0];
+                            const msg={
+                                'success':'setAnchor successful',
+                                'block':block,
+                            }
+                            console.log(msg);
+                            console.log(unsub);
+                            unsub();
+                            
+                        }).then((uuu)=>{
+                            console.log('anchorOwner unsub:');
+                            console.log(uuu)
+                        });
+                    }
+                }).then((un)=>{
+                    console.log(typeof un);
+                    unsub=un;
+                });
+            }, 3000);
+        },
     }
 
     let [dom, setDom] = useState((< Search wsAPI={wsAPI} onCheck={self.anchorCheck}/>));
@@ -452,6 +487,8 @@ function App(props) {
     let [market, setMarket] = useState(< Error data={'Linking to ' + server + '...'}/>);
 
     useEffect(() => {
+        self.test_unsub();
+
         API.link(server, () => {
             setMarket((< ListSell wsAPI={wsAPI} buy={self.buy} tools={tools} />));
         });
