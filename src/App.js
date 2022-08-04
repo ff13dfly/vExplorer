@@ -174,22 +174,88 @@ function App(props) {
         },
         getTargetAnchor:function(anchor,block,ck,list){
             if(!list) list=[];
-            const row={block:block,owner:'',pre:0};
+            let row={block:block,owner:'',action:'',pre:0,data:null};
             wsAPI.rpc.chain.getBlockHash(block,function(res){
                 const hash = res.toHex();
-                console.log(block+':'+hash);
-                wsAPI.query.system.events.at(hash,function(events){
-                    events.forEach(({event}) => {
-                        const index=event.index.toHex();
-                        if(index==='0x1d00'){
-                            const his=event.data.toHuman();
-                            const pre=parseInt(his[1]),owner=his[0];
-                            row.owner=owner;
-                            row.pre=pre;
-                            list.push(row);
-                            if(pre===0) return ck && ck(list);
-                            else return API.getTargetAnchor(anchor,pre,ck,list);
+                //console.log(block+':'+hash);
+
+                //获取anchor的内容，会出现同一block里保存了多个anchor的情况，需要按名称进行筛选
+                wsAPI.rpc.chain.getBlock(hash).then((dt) => {
+                    if (dt.block.extrinsics.length === 1) return ck && ck(false);
+                    const ans = API.filterAnchor(dt, filter);
+                    for (let i = 0; i < ans.length; i++) {
+                        const erow = ans[i];
+                        const data = erow.method.args;
+                        const key = tools.hex2str(erow.method.args.key);
+                        //console.log(key);
+                        if(key!== anchor) continue;
+                        //console.log(data.raw);
+                        row.data= {
+                            raw: data.raw,
+                            protocol: JSON.parse(tools.hex2str(data.protocol)),
                         }
+                    }
+                    //console.log(row);
+                    wsAPI.query.system.events.at(hash,function(events){
+                        events.forEach(({event}) => {
+                            const index=event.index.toHex();
+                            const his=event.data.toHuman();
+                            let pre,owner;
+                            switch (index) {
+                                case '0x1d00':
+                                    pre=parseInt(his[1]);
+                                    owner=his[0];
+                                    
+                                    row.owner=owner;
+                                    row.pre=pre;
+                                    row.action='set';
+                                    list.push(row);
+                                    if(pre===0) return ck && ck(list);
+                                    else return API.getTargetAnchor(anchor,pre,ck,list);
+
+                                    break;
+
+                                case '0x1d01':  //sell status
+                                    //console.log(his);
+                                    pre=parseInt(his[3]);
+                                    owner=his[0];
+
+                                    row.owner=owner;
+                                    row.pre=pre;
+                                    row.action='sell';
+
+                                    row.extend={
+                                        price:his[1],
+                                        target:his[2],
+                                    }
+
+                                    list.push(row);
+                                    if(pre===0) return ck && ck(list);
+                                    else return API.getTargetAnchor(anchor,pre,ck,list);
+                                    break; 
+
+                                case '0x1d02':  //sold status
+                                    //console.log(his);
+                                    pre=parseInt(his[3]);
+                                    owner=his[0];
+                                    row.owner=owner;
+                                    row.pre=pre;
+                                    row.action='sold';
+
+                                    row.extend={
+                                        price:his[2],
+                                        from:his[1],
+                                    }
+
+                                    list.push(row);
+                                    if(pre===0) return ck && ck(list);
+                                    else return API.getTargetAnchor(anchor,pre,ck,list);
+                                    break; 
+                                default:
+
+                                    break;
+                            }
+                        });
                     });
                 });
             });
