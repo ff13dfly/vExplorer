@@ -14,6 +14,7 @@ import Error from './common/error';
 import { ApiPromise, WsProvider,Keyring } from '@polkadot/api';
 //import { stringToU8a } from '@polkadot/util'
 import { encodeAddress } from '@polkadot/util-crypto';
+//import { Skeleton } from 'three';
 
 //import $ from 'jquery';
 
@@ -162,14 +163,43 @@ function App(props) {
             });
 
         },
+        historyAnchor:function(anchor,ck){
+            wsAPI.query.anchor.anchorOwner(anchor, (res) => {
+                if (res.isEmpty) return ck && ck(false);
+                const block = res.value[1].words[0];
+                API.getTargetAnchor(anchor,block,function(list){
+                    console.log(list);
+                });
+            });
+        },
+        getTargetAnchor:function(anchor,block,ck,list){
+            if(!list) list=[];
+            const row={block:block,owner:'',pre:0};
+            wsAPI.rpc.chain.getBlockHash(block,function(res){
+                const hash = res.toHex();
+                console.log(block+':'+hash);
+                wsAPI.query.system.events.at(hash,function(events){
+                    events.forEach(({event}) => {
+                        const index=event.index.toHex();
+                        if(index==='0x1d00'){
+                            const his=event.data.toHuman();
+                            const pre=parseInt(his[1]),owner=his[0];
+                            row.owner=owner;
+                            row.pre=pre;
+                            list.push(row);
+                            if(pre===0) return ck && ck(list);
+                            else return API.getTargetAnchor(anchor,pre,ck,list);
+                        }
+                    });
+                });
+            });
+        },
         viewAnchor: (block, name, owner, ck) => {
             wsAPI.rpc.chain.getBlockHash(block, (res) => {
                 const hash = res.toHex();
                 if (!hash) return ck && ck(false);
-                wsAPI.rpc.chain.getBlock(hash).then((dt) => {
-                    //console.log(dt);
+                wsAPI.rpc.chain.getBlock(hash).then((dt) => {                      
                     if (dt.block.extrinsics.length === 1) return ck && ck(false);
-
                     const ans = API.filterAnchor(dt, filter);
                     for (let i = 0; i < ans.length; i++) {
                         const row = ans[i];
@@ -187,6 +217,7 @@ function App(props) {
                 });
             });
         },
+        
         filterAnchor: (dt, filter) => {
             let arr = [];
             dt.block.extrinsics.forEach((ex, index) => {
@@ -476,6 +507,58 @@ function App(props) {
                 });
             }, 3000);
         },
+
+        test_events:function(){
+            wsAPI.query.system.events((events)=>{
+                events.forEach((record) => {
+                    // Extract the phase, event and the event types
+                    const { event, phase } = record;
+                    const types = event.typeDef;
+              
+                    // Show what we are busy with
+                    console.log(`\t${event.section}:${event.method}:: (phase=${phase.toString()})`);
+                    //console.log(`\t\t${event.meta.documentation.toString()}`);
+              
+                    // Loop through each of the parameters, displaying the type and data
+                    event.data.forEach((data, index) => {
+                      console.log(`\t\t\t${types[index].type}: ${data.toString()}`);
+                    });
+                });
+            });
+
+            const block = 39;
+            wsAPI.rpc.chain.getBlockHash(block,function(res){
+                const hash = res.toHex();
+                wsAPI.query.system.events.at(hash,function(events){
+                    events.forEach(({event}) => {
+                        console.log(event.index.toHex());
+                        console.log(event.data.toHuman())
+                        console.log(`Event: ${JSON.stringify(event)}`);
+                    });
+                });
+                
+                //console.log(wsAPI.query.system.events);
+                wsAPI.query.system.events((evs)=>{
+                    evs.forEach((ev)=>{
+                        if(ev.phase.isApplyExtrinsic){
+                            const index=ev.event.index.toHuman();
+                            if(index==='0x1d00'){
+                                console.log(ev.event.data);
+                                console.log(ev.event.data[1].words[0]);
+                                console.log(ev.event.data.method);
+                            }
+                            //console.log(JSON.stringify(ev))
+                        }
+                    });
+                });
+            });
+        },
+        test_history:function(){
+            var name='hello';
+            API.historyAnchor(name,function(list){
+                console.log(list);
+            });
+        },
     }
 
     let [dom, setDom] = useState((< Search wsAPI={wsAPI} onCheck={self.anchorCheck}/>));
@@ -487,13 +570,12 @@ function App(props) {
     let [market, setMarket] = useState(< Error data={'Linking to ' + server + '...'}/>);
 
     useEffect(() => {
-        self.test_unsub();
-
         API.link(server, () => {
+            self.test_history();
+
             setMarket((< ListSell wsAPI={wsAPI} buy={self.buy} tools={tools} />));
         });
     }, []);
-
 
     return (<div>
         <Navbar bg="light" expand="lg">
