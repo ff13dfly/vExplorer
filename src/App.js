@@ -29,7 +29,7 @@ function App(props) {
         rpcEndpoint: 'rpc.php',
     }
 
-    const filter = { '0x1d00': true, '0x1d02': true } //前者是新建的setAnchor，后者是sellAnchor
+    const filter = { '0x1d00': true } //前者是新建的setAnchor，后者是sellAnchor
     const tools = {
         shortenAddress: (address, n) => {
             if (n === undefined) n = 10;
@@ -167,6 +167,7 @@ function App(props) {
             wsAPI.query.anchor.anchorOwner(anchor, (res) => {
                 if (res.isEmpty) return ck && ck(false);
                 const block = res.value[1].words[0];
+                //console.log(block);
                 API.getTargetAnchor(anchor,block,function(list){
                     console.log(list);
                 });
@@ -195,11 +196,12 @@ function App(props) {
                             protocol: JSON.parse(tools.hex2str(data.protocol)),
                         }
                     }
-                    //console.log(row);
+                    //console.log(ans);
                     wsAPI.query.system.events.at(hash,function(events){
                         events.forEach(({event}) => {
                             const index=event.index.toHex();
                             const his=event.data.toHuman();
+                            //console.log(index+':'+JSON.stringify(his))
                             let pre,owner;
                             switch (index) {
                                 case '0x1d00':
@@ -236,6 +238,22 @@ function App(props) {
 
                                 case '0x1d02':  //sold status
                                     //console.log(his);
+                                    pre=parseInt(his[1]);
+                                    owner=his[0];
+                                    row.owner=owner;
+                                    row.pre=pre;
+                                    row.action='unsell';
+
+                                    row.extend={
+                                        from:owner,
+                                    }
+
+                                    list.push(row);
+                                    if(pre===0) return ck && ck(list);
+                                    else return API.getTargetAnchor(anchor,pre,ck,list);
+                                    break;
+                                case '0x1d03':  //unsell status
+                                    //console.log(his);
                                     pre=parseInt(his[3]);
                                     owner=his[0];
                                     row.owner=owner;
@@ -243,8 +261,8 @@ function App(props) {
                                     row.action='sold';
 
                                     row.extend={
-                                        price:his[2],
                                         from:his[1],
+                                        price:his[2],
                                     }
 
                                     list.push(row);
