@@ -29,7 +29,6 @@ function App(props) {
         rpcEndpoint: 'rpc.php',
     }
 
-    const filter = { '0x1d00': true } //前者是新建的setAnchor，后者是sellAnchor
     const tools = {
         shortenAddress: (address, n) => {
             if (n === undefined) n = 10;
@@ -88,7 +87,7 @@ function App(props) {
             wsAPI.rpc.chain.subscribeFinalizedHeads((lastHeader) => {
                 const lastHash = lastHeader.hash.toHex();
                 wsAPI.rpc.chain.getBlock(lastHash).then((dt) => {
-                    const ans = API.filterAnchor(dt, filter);
+                    const ans = API.filterAnchor(dt,'setAnchor');
                     const list = [];
                     for (let i = 0; i < ans.length; i++) {
                         const row = ans[i];
@@ -164,46 +163,54 @@ function App(props) {
 
         },
         historyAnchor:function(anchor,ck){
+            let unsub=null;
             wsAPI.query.anchor.anchorOwner(anchor, (res) => {
                 if (res.isEmpty) return ck && ck(false);
                 const block = res.value[1].words[0];
                 //console.log(block);
                 API.getTargetAnchor(anchor,block,function(list){
                     console.log(list);
+                    unsub();
                 });
+            }).then((un)=>{
+                unsub=un;
             });
+        },
+
+        getAnchorData:(dt,method)=>{
+            let arr = [];
+            dt.block.extrinsics.forEach((ex, index) => {
+                const dt=ex.toHuman();
+                if (index !== 0 && dt.method.method === method) {
+                    arr.push(dt.method);
+                }
+            });
+            return arr;
         },
         getTargetAnchor:function(anchor,block,ck,list){
             if(!list) list=[];
             wsAPI.rpc.chain.getBlockHash(block,function(res){
                 const hash = res.toHex();
-                //console.log(block+':'+hash);
-
                 //获取anchor的内容，会出现同一block里保存了多个anchor的情况，需要按名称进行筛选
                 wsAPI.rpc.chain.getBlock(hash).then((dt) => {
                     if (dt.block.extrinsics.length === 1) return ck && ck(false);
-                    const ans = API.filterAnchor(dt, filter);
+                    const ans = API.getAnchorData(dt,'setAnchor');
                     let raw=null;
                     for (let i = 0; i < ans.length; i++) {
-                        const erow = ans[i];
-                        const data = erow.method.args;
-                        const key = tools.hex2str(erow.method.args.key);
-                        //console.log(key);
-                        if(key!== anchor) continue;
-                        //console.log(data.raw);
-                        raw= {
-                            raw: data.raw,
-                            protocol: JSON.parse(tools.hex2str(data.protocol)),
-                        }
+                        const data = ans[i].args;
+                        if(data.key!== anchor) continue;
+                        raw= data
                     }
-                    //console.log(ans);
+
                     wsAPI.query.system.events.at(hash,function(events){
                         events.forEach(({event}) => {
                             const info=API.decodeEvent(event);
-                            if(info==false) return false;
-                            if(raw!=null) info.data=raw;
+                            if(info===false) return false;
+
                             info.block=block;
+                            if(raw!=null) info.data=raw;
                             list.push(info);
+
                             if(info.pre===0) return ck && ck(list);
                             else return API.getTargetAnchor(anchor,info.pre,ck,list);
                         });
@@ -212,22 +219,23 @@ function App(props) {
             });
         },
         decodeEvent:function(event){
-            //event的index，注意！是可以和wsAPI.tx.anchor里的index不一样的
+            //使用event的method，可以避免index带来的默认值调整
             var preter={
-                "0x1d00":API.deSet,
-                "0x1d01":API.deSell,
-                "0x1d02":API.deBuy,
-                "0x1d03":API.deUnsell,
+                "AnchorSet":API.deSet,
+                "AnchorToSell":API.deSell,
+                "AnchorSold":API.deBuy,
+                "AnchorUnSell":API.deUnsell,
             }
-            const index=event.index.toHex();
-            if(!preter[index]) return false;
-            return preter[index](event.data);
+            const method=event.method;
+            if(!preter[method]) return false;
+            //console.log(event.toHuman());
+            return preter[method](event.data);
         },
         deSet:function(data){
             const dt=data.toHuman();
             return {
                 owner:dt[0],
-                pre:parseInt(dt[1]),
+                pre:parseInt(dt[1].replace(/,/gi, '')),
                 action:'set',
             }
         },
@@ -235,11 +243,11 @@ function App(props) {
             const dt=data.toHuman();
             return {
                 owner:dt[0],
-                pre:parseInt(dt[3]),
+                pre:parseInt(dt[3].replace(/,/gi, '')),
                 action:'sell',
                 extra:{
                     price:dt[1],
-                    target:dt[2],
+                    to:dt[2],
                 }
             }
         },
@@ -247,7 +255,7 @@ function App(props) {
             const dt=data.toHuman();
             return {
                 owner:dt[0],
-                pre:parseInt(dt[3]),
+                pre:parseInt(dt[3].replace(/,/gi, '')),
                 action:'buy',
                 extra:{
                     from:dt[1],
@@ -259,19 +267,17 @@ function App(props) {
             const dt=data.toHuman();
             return {
                 owner:dt[0],
-                pre:parseInt(dt[1]),
+                pre:parseInt(dt[1].replace(/,/gi, '')),
                 action:'unsell',
             }
         },
-
-
         viewAnchor: (block, name, owner, ck) => {
             wsAPI.rpc.chain.getBlockHash(block, (res) => {
                 const hash = res.toHex();
                 if (!hash) return ck && ck(false);
                 wsAPI.rpc.chain.getBlock(hash).then((dt) => {                      
                     if (dt.block.extrinsics.length === 1) return ck && ck(false);
-                    const ans = API.filterAnchor(dt, filter);
+                    const ans = API.filterAnchor(dt, 'setAnchor');
                     for (let i = 0; i < ans.length; i++) {
                         const row = ans[i];
                         const account = row.signature.signer.id;
@@ -288,14 +294,15 @@ function App(props) {
                 });
             });
         },
+
+
         
-        filterAnchor: (dt, filter) => {
+        filterAnchor: (dt, method) => {
             let arr = [];
             dt.block.extrinsics.forEach((ex, index) => {
-                //console.log(self.u8toString(ex.method.callIndex));
-                if (index !== 0) {
-                    const key = tools.u8toString(ex.method.callIndex);
-                    if (filter[key]) arr.push(JSON.parse(ex.toString()));
+                const dt=ex.method.toHuman();
+                if (index !== 0 && dt.method === method) {
+                    arr.push(JSON.parse(ex.toString()));
                 }
             });
             return arr;
