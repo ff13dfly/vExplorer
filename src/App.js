@@ -638,6 +638,12 @@ function App(props) {
                 console.log(list);
             });
         },
+        test_sub_anchor:function(){
+            // wsAPI.query.system.is('setAnchor',function(res){
+            //     console.log(res);
+            // })
+            //console.log();
+        },
     }
 
     let [dom, setDom] = useState((< Search wsAPI={wsAPI} onCheck={self.anchorCheck}/>));
@@ -651,7 +657,7 @@ function App(props) {
     useEffect(() => {
         API.link(server, () => {
             self.test_history();
-
+            self.test_sub_anchor();
             setMarket((< ListSell wsAPI={wsAPI} buy={self.buy} tools={tools} />));
         });
     }, []);
