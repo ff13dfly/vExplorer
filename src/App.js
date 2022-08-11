@@ -17,6 +17,8 @@ import { encodeAddress } from '@polkadot/util-crypto';
 //import { Skeleton } from 'three';
 
 //import $ from 'jquery';
+/************ test import *************/
+import RRR from './lib/rpc.js';
 
 let wsAPI = null;
 function App(props) {
@@ -632,7 +634,7 @@ function App(props) {
             });
         },
         test_history:function(){
-            console.log(wsAPI.tx.anchor)
+            //console.log(wsAPI.tx.anchor)
             var name='hello';
             API.historyAnchor(name,function(list){
                 console.log(list);
@@ -643,6 +645,13 @@ function App(props) {
             //     console.log(res);
             // })
             //console.log();
+        },
+        test_rpc:function(){
+            console.log(RRR);
+            RRR.getEntry(function(dt){
+                console.log('Information from test_rpc in file app.js');
+                console.log(dt);
+            });
         },
     }
 
@@ -656,8 +665,9 @@ function App(props) {
 
     useEffect(() => {
         API.link(server, () => {
-            self.test_history();
-            self.test_sub_anchor();
+            //self.test_history();
+            //self.test_sub_anchor();
+            self.test_rpc();
             setMarket((< ListSell wsAPI={wsAPI} buy={self.buy} tools={tools} />));
         });
     }, []);

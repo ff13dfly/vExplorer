@@ -1,4 +1,6 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
+import Direct from './direct';
+import Gateway from './gateway';
 
 const config={
 	endpoint:'ws://localhost:9944',
@@ -6,9 +8,9 @@ const config={
 };
 let wsAPI=null;
 const self={
-	link: (server, ck) => {
+	link: (ck) => {
 		if (wsAPI === null) {
-			const wsPvd = new WsProvider(server);
+			const wsPvd = new WsProvider(config.endpoint);
 			ApiPromise.create({ provider: wsPvd }).then((api) => {
 				wsAPI = api;
 				ck && ck();
@@ -18,26 +20,53 @@ const self={
 		}
 	},
 	search: (anchor, ck) => {
-		API.link(server, () => {
+		self.link(() => {
 			wsAPI.query.anchor.anchorOwner(anchor, (res) => {
-				if (res.isEmpty) {
-					ck && ck({ owner: 0, blocknumber: 0, anchor: anchor });
-				} else {
-					const owner = encodeAddress(res.value[0].toHex());
-					const block = res.value[1].words[0];
-					let result = { owner: owner, blocknumber: block, anchor: anchor };
-					wsAPI.query.anchor.sellList(anchor, (dt) => {
-						if (dt.value.isEmpty) return ck && ck(result);
-						const cost = dt.value[1].words[0];
-						result.cost = cost;
+				if (res.isEmpty) return ck && ck(false);
+				const owner =res.value[0].toHuman();
+				const block = res.value[1].words[0];
+				let result = { owner: owner, blocknumber: block, name: anchor,raw:{} };
+				wsAPI.rpc.chain.getBlockHash(block, (res) => {
+					const hash = res.toHex();
+					if (!hash) return ck && ck(false);
+					wsAPI.rpc.chain.getBlock(hash).then((dt) => {                      
+						if (dt.block.extrinsics.length === 1) return ck && ck(false);
+						const exs = self.filter(dt,'setAnchor');
+						let raw=null;
+						for (let i = 0; i < exs.length; i++) {
+							const data = exs[i].args;
+							if(data.key!== anchor) continue;
+							if(data.protocol) data.protocol=JSON.parse(data.protocol);
+							if(data.protocol.type === "data" && data.protocol.format === "JSON") data.raw=JSON.parse(data.raw);
+							result.raw=data;
+						}
 						ck && ck(result);
 					});
-				}
+				});
+				
 			});
 		});
 	},
+	filter: (dt, method) => {
+		let arr = [];
+        dt.block.extrinsics.forEach((ex, index) => {
+            const dt=ex.toHuman();
+            if (index !== 0 && dt.method.method === method) {
+                arr.push(dt.method);
+            }
+        });
+        return arr;
+	},
 };
 
-exports.entry=function(){
-	
-}
+const RRR={
+	getEntry:function(ck){
+		self.search(config.entry,function(res){
+			ck && ck(res);
+		});
+	},
+	direct:Direct,
+	gateway:Gateway,
+};
+
+export default RRR;
