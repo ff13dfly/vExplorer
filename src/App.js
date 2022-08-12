@@ -11,235 +11,24 @@ import Sign from './common/sign';
 import ListSell from './common/listSell';
 import Error from './common/error';
 
-import { ApiPromise, WsProvider,Keyring } from '@polkadot/api';
-import { encodeAddress } from '@polkadot/util-crypto';
+import RPC from './lib/rpc.js';
+import tools from './lib/tools.js';
 
-//import $ from 'jquery';
 /************ test import *************/
-import RRR from './lib/rpc.js';
+
 
 let wsAPI = null;
 function App(props) {
-    const server = 'ws://localhost:9944';
-    //const server='wss://network.metanchor.net';
-
     const keys = {
         jsonFile: 'js_file_name',
         anchorList: 'anchor_list',
         rpcEndpoint: 'rpc.php',
     }
 
-    const tools = {
-        shortenAddress: (address, n) => {
-            if (n === undefined) n = 10;
-            return address.substr(0, n) + '...' + address.substr(address.length - n, n);
-        },
-        u8toString: (arr) => {
-            let str = '0x';
-            for (let i = 0; i < arr.length; i++) {
-                if (arr[i] < 16) str += '0';
-                str += arr[i].toString(16);
-            }
-            return str;
-        },
-        hex2str: (hex) => {
-            if (!hex) return false;
-            var trimedStr = hex.trim();
-            var rawStr = trimedStr.substr(0, 2).toLowerCase() === "0x" ? trimedStr.substr(2) : trimedStr;
-            var len = rawStr.length;
-            if (len % 2 !== 0) { alert("Illegal Format ASCII Code!"); return ""; }
-            var curCharCode;
-            var resultStr = [];
-            for (var i = 0; i < len; i = i + 2) {
-                curCharCode = parseInt(rawStr.substr(i, 2), 16);
-                resultStr.push(String.fromCharCode(curCharCode));
-            }
-            return resultStr.join("");
-        },
-        hex2ab: (hex) => {
-            const typedArray = new Uint8Array(hex.match(/[\da-f]{2}/gi).map(function (h) {
-                return parseInt(h, 16)
-            }));
-            return typedArray.buffer;
-        },
-    }
-
     let [content, setContent] = useState('');
     let [show, setShow] = useState(false);
 
-    const API = {
-        link: (server, ck) => {
-            if (wsAPI === null) {
-                const wsProvider = new WsProvider(server);
-                ApiPromise.create({ provider: wsProvider }).then((api) => {
-                    wsAPI = api;
-                    // console.log(wsAPI.events.anchor.AnchorSet);
-                    // wsAPI.events.anchor.AnchorSet.is((account,n)=>{
-                    //     console.log(account);
-                    // });
-                    ck && ck();
-                });
-            } else {
-                ck && ck();
-            }
-        },
-        listening: (ck) => {
-            wsAPI.rpc.chain.subscribeFinalizedHeads((lastHeader) => {
-                const lastHash = lastHeader.hash.toHex();
-                wsAPI.rpc.chain.getBlock(lastHash).then((dt) => {
-                    const ans = API.filterAnchor(dt,'setAnchor');
-                    const list = [];
-                    for (let i = 0; i < ans.length; i++) {
-                        const row = ans[i];
-                        const account = row.signature.signer.id;
-                        const key = tools.hex2str(row.method.args.key);
-                        const adata = row.method.args;
-                        const obj = {
-                            block: lastHeader.number,
-                            account: account,
-                            anchor: key,
-                            raw: adata.raw,
-                            protocol: JSON.parse(tools.hex2str(adata.protocol)),
-                        }
-                        list.push(obj);
-                    }
-                    ck && ck(list);
-                });
-            });
-        },
-        getBalance: (account, ck) => {
-            wsAPI.query.system.account(account, (res) => {
-                ck && ck(res);
-            })
-        },
-        anchorToSell: (pair, anchor, cost, ck) => {
-            wsAPI.tx.anchor.sellAnchor(anchor, cost).signAndSend(pair, (res) => {
-                ck && ck(res);
-            });
-        },
-        getSellList: (ck) => {
-            wsAPI.query.anchor.sellList.entries().then((arr) => {
-                ck && ck(arr);
-            });
-        },
-        buyAnchor: (pair, anchor, ck) => {
-            if (!anchor) return false;
-            self.isSelling(anchor, (menu) => {
-                if (menu.owner === 0) {
-                    const protocol = { "type": "data" };
-                    wsAPI.tx.anchor.setAnchor(anchor, 'Anchor created.', JSON.stringify(protocol)).signAndSend(pair, (result) => {
-                        ck && ck(result);
-                    });
-                } else {
-                    wsAPI.tx.anchor.buyAnchor(anchor).signAndSend(pair, (result) => {
-                        ck && ck(result);
-                    });
-                }
-            });
-        },
-        rewriteAnchor: (pair, anchor, data, ck) => {
-            wsAPI.tx.anchor.setAnchor(anchor, data.raw, data.protocol).signAndSend(pair, (result) => {
-                ck && ck(result);
-            });
-        },
-        search: (anchor, ck) => {
-            API.link(server, () => {
-                wsAPI.query.anchor.anchorOwner(anchor, (res) => {
-                    if (res.isEmpty) {
-                        ck && ck({ owner: 0, blocknumber: 0, anchor: anchor });
-                    } else {
-                        const owner = encodeAddress(res.value[0].toHex());
-                        const block = res.value[1].words[0];
-                        let result = { owner: owner, blocknumber: block, anchor: anchor };
-                        wsAPI.query.anchor.sellList(anchor, (dt) => {
-                            if (dt.value.isEmpty) return ck && ck(result);
-                            const cost = dt.value[1].words[0];
-                            result.cost = cost;
-                            ck && ck(result);
-                        });
-                    }
-                });
-            });
 
-        },
-        viewAnchor: (block, name, owner, ck) => {
-            wsAPI.rpc.chain.getBlockHash(block, (res) => {
-                const hash = res.toHex();
-                if (!hash) return ck && ck(false);
-                wsAPI.rpc.chain.getBlock(hash).then((dt) => {                      
-                    if (dt.block.extrinsics.length === 1) return ck && ck(false);
-                    const ans = API.filterAnchor(dt, 'setAnchor');
-                    for (let i = 0; i < ans.length; i++) {
-                        const row = ans[i];
-                        const account = row.signature.signer.id;
-                        const key = tools.hex2str(row.method.args.key);
-                        if (account !== owner || key !== name) return ck && ck(false);
-
-                        const adata = row.method.args;
-                        const obj = {
-                            raw: adata.raw,
-                            protocol: JSON.parse(tools.hex2str(adata.protocol)),
-                        }
-                        ck && ck(obj)
-                    }
-                });
-            });
-        },
-
-
-        
-        filterAnchor: (dt, method) => {
-            let arr = [];
-            dt.block.extrinsics.forEach((ex, index) => {
-                const dt=ex.method.toHuman();
-                if (index !== 0 && dt.method === method) {
-                    arr.push(JSON.parse(ex.toString()));
-                }
-            });
-            return arr;
-        },
-
-        getAddress: () => {
-            const str = localStorage.getItem(keys.jsonFile);
-            const acc = str === null ? false : JSON.parse(str);
-            return acc === false ? false : acc.address;
-        },
-
-        // rewriteAnchor: (pair, anchor, data, ck) => {
-        //     wsAPI.tx.anchor.setAnchor(anchor, data.raw, data.protocol).signAndSend(pair, (result) => {
-        //         ck && ck(result);
-        //     });
-        // },
-        vertify:(anchor,raw,protocol,ck)=>{
-            const k = keys.jsonFile;
-            setContent(
-                (< Sign accountKey={k}
-                    callback={
-                        (pair, name , ext) => {
-                            console.log(ext);
-                            const data={raw:raw,protocol:protocol}
-                            API.rewriteAnchor(pair,anchor,data,(res)=>{
-                                setShow(false);
-                                ck && ck(res);
-                            })
-                        }
-                    }
-                    anchor={anchor}
-                />)
-            );
-            setTitle((<span className="text-warning" > {anchor}</span>));
-            setShow(true);
-        },
-    }
-
-    const agent = {
-        search: API.search,
-        view: API.viewAnchor,
-        write: API.rewriteAnchor,
-        subscribe: API.listening,
-        vertify:API.vertify,
-        tools: tools,
-    }
 
     let cur = 'home';
     const self = {
@@ -251,13 +40,32 @@ function App(props) {
             setResult('');
             setOnsell('');
         },
+        vertify:(anchor,raw,protocol,ck)=>{
+            const k = keys.jsonFile;
+            setContent(
+                (< Sign accountKey={k}
+                    callback={
+                        (pair, name , ext) => {
+                            console.log(ext);
+                            const data={raw:raw,protocol:protocol}
+                            RPC.direct(pair,anchor,data,(res)=>{
+                                setShow(false);
+                                ck && ck(res);
+                            })
+                        }
+                    }
+                    anchor={anchor}
+                />)
+            );
+            setTitle((<span className="text-warning" > {anchor}</span>));
+            setShow(true);
+        },
         getDom: (router) => {
             self.clean();
             switch (router) {
                 case 'home':
                     setMarket((< ListSell wsAPI={wsAPI}
                         buy={self.buy}
-                        tools={tools}
                     />));
                     setDom((< Search onCheck={
                         (name) => { self.anchorCheck(name) }}
@@ -279,7 +87,7 @@ function App(props) {
                 case 'account':
                     setMarket('');
                     setDom((< Account keys={keys}
-                        onCheck={(name) => { self.anchorCheck(name) }} balance={API.getBalance}
+                        onCheck={(name) => { self.anchorCheck(name) }} balance={self.getBalance}
                     />));
                     break;
 
@@ -299,7 +107,7 @@ function App(props) {
                     callback={
                         (pair, name, ext) => {
                             //console.log('call Sign callback');
-                            API.rewriteAnchor(pair, name, ext, (res) => {
+                            RPC.direct.write(pair, name, ext, (res) => {
                                 //会返回3次结果，最后一次的isFinalized为true才是写入到了链里   
                                 self.handleClose();
                             });
@@ -323,7 +131,7 @@ function App(props) {
                 setContent((< Sign accountKey={k}
                     callback={
                         (pair, name, ext) => {
-                            API.anchorToSell(pair, name, ext.sell, (res) => {
+                            RPC.direct.sell(pair, name, ext.sell, (res) => {
                                 self.handleClose();
                             });
                         }
@@ -338,7 +146,7 @@ function App(props) {
         buy: (anchor, cost) => {
             //console.log('target:'+anchor+',cost:'+cost);
 
-            const address = API.getAddress();
+            const address = self.getAddress();
             if (address === false) return false; //用户未登录的情况
 
             //1.检查anchor是否处于销售状态；
@@ -347,7 +155,7 @@ function App(props) {
                 if (menu.cost !== cost) return false;
 
                 //2.检查用户的balance;
-                API.getBalance(address, (res) => {
+                self.getBalance(address, (res) => {
                     console.log(res.data.free);
                     console.log(res.data.free.toString());
                     console.log(res.data.free.toBigInt());
@@ -369,9 +177,10 @@ function App(props) {
                 return false;
             }
 
-            setMarket(''); API.search(anchor, self.optAnchorResult);
+            setMarket(''); RPC.direct.search(anchor, self.optAnchorResult);
         },
         optAnchorResult: (dt) => {
+            console.log(dt);
             if (dt.owner === 0) {
                 setResult(< Buy anchor={dt.anchor}
                     setAnchor={self.initAnchor}
@@ -382,13 +191,14 @@ function App(props) {
                 const owner = dt.owner;
                 const block = dt.blocknumber;
 
-                RRR.direct.view(block, name, owner, (res) => {
-                    if (!res.protocol) {
+                RPC.direct.view(block, name, owner, (res) => {
+                    //console.log(res);
+                    if (!res || !res.raw.protocol) {
                         setResult(< Error data='No data to show.' />);
                     } else {
                         setResult(< Detail anchor={name}
                             raw={res.raw}
-                            protocol={res.protocol}
+                            protocol={res.raw.protocol}
                             owner={dt.owner}
                             block={block}
                             link={wsAPI}
@@ -399,18 +209,15 @@ function App(props) {
                 });
             }
         },
-        buyTarget: (anchor) => {
-
-        },
         isSelling: (anchor, ck) => {
-            API.search(anchor, (dt) => {
+            RPC.direct.search(anchor, (dt) => {
                 ck && ck(dt);
             });
         },
         isOwner: (anchor, ck) => {
-            const address = API.getAddress();
+            const address = self.getAddress();
             if (!address) return ck && ck(false);
-            API.search(anchor, (dt) => {
+            RPC.direct.search(anchor, (dt) => {
                 ck && ck(dt.owner === address ? dt : false);
             });
         },
@@ -423,7 +230,7 @@ function App(props) {
                     (< Sign accountKey={k}
                         callback={
                             (pair, name) => {
-                                API.buyAnchor(pair, name, (res) => {
+                                RPC.direct.buy(pair, name, (res) => {
                                     self.handleClose();
                                 });
                             }
@@ -441,6 +248,18 @@ function App(props) {
         handleShow: () => {
             setShow(true);
         },
+        getAddress: () => {
+            const str = localStorage.getItem(keys.jsonFile);
+            const acc = str === null ? false : JSON.parse(str);
+            return acc === false ? false : acc.address;
+        },
+    }
+
+    const agent = {
+        search: RPC.direct.search,
+        view: RPC.direct.view,
+        write: RPC.direct.write,
+        vertify:self.vertify,
     }
 
     let [dom, setDom] = useState((< Search wsAPI={wsAPI} onCheck={self.anchorCheck}/>));
@@ -449,13 +268,18 @@ function App(props) {
     let [title, setTitle] = useState('');
 
     let [onsell, setOnsell] = useState('');
-    let [market, setMarket] = useState(< Error data={'Linking to ' + server + '...'}/>);
+    let [market, setMarket] = useState(< Error data={'Linking ...'}/>);
 
     useEffect(() => {
-        RRR.init(function(dt){
+        RPC.init(function(dt){
             console.log('Information from test_rpc in file app.js');
             console.log('Entry:'+JSON.stringify(dt));
-            setMarket((< ListSell wsAPI={RRR.link} buy={RRR.direct.buy} tools={tools} />));
+            wsAPI=RPC.link;
+            RPC.direct.history('hello',function(res){
+                console.log(res);
+            });
+
+            setMarket((< ListSell wsAPI={wsAPI} buy={RPC.direct.buy} tools={tools} />));
         });
     }, []);
 

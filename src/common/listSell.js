@@ -3,9 +3,11 @@ import { useState,useEffect } from 'react';
 
 import { Container,Button,Row,Col } from 'react-bootstrap';
 
+import tools from '../lib/tools.js';
+
 function ListSell(props) {
 	const RPC=props.wsAPI.query.anchor.sellList;
-	const shorten=props.tools.shortenAddress;
+	const shorten=tools.shortenAddress;
 
 	let [list, setList] = useState([]);
 

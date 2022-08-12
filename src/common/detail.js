@@ -21,7 +21,7 @@ function Detail(props) {
 
   switch (props.protocol.type) {
     case 'data':
-      dom=(<Data anchor={name} raw={raw} owner={owner} block={block} tools={props.tools}/>);
+      dom=(<Data anchor={name} raw={raw} owner={owner} block={block}/>);
     break;
 
     case 'NFT':

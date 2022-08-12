@@ -60,11 +60,11 @@ const self={
 	},
 };
 
-const RRR={
+const RPC={
 	init:function(ck){
 		self.search(config.entry,function(res){
 			Direct.set.websocket(wsAPI);
-			RRR.link=wsAPI;
+			RPC.link=wsAPI;
 			ck && ck(res);
 		});
 	},
@@ -73,4 +73,4 @@ const RRR={
 	gateway:Gateway,
 };
 
-export default RRR;
+export default RPC;

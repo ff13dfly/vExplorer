@@ -9,23 +9,33 @@ const self = {
 		wsAPI=ws;
 	},
 	search: (anchor, ck) => {
+		let unsub=null;
+		let unlist=null;
 		wsAPI.query.anchor.anchorOwner(anchor, (res) => {
 			if (res.isEmpty) {
 				ck && ck({ owner: 0, blocknumber: 0, anchor: anchor });
 			} else {
-				const owner = res.value[0].toHuman();
+				const data = res.toHuman();
+				const owner = data[0];
 				const block = res.value[1].words[0];
 				let result = { owner: owner, blocknumber: block, anchor: anchor };
 				wsAPI.query.anchor.sellList(anchor, (dt) => {
+					unlist();
 					if (dt.value.isEmpty) return ck && ck(result);
 					const cost = dt.value[1].words[0];
 					result.cost = cost;
 					ck && ck(result);
+				}).then((uu)=>{
+					unlist=uu;
 				});
 			}
+			unsub();
+		}).then((un)=>{
+			//console.log(un);
+			unsub=un;
 		});
 	},
-	view: (block, anchor, owner, ck) => {
+	view:(block, anchor, owner, ck) => {
 		wsAPI.rpc.chain.getBlockHash(block, (res) => {
 			const hash = res.toHex();
 			if (!hash) return ck && ck(false);
@@ -173,6 +183,35 @@ const self = {
 	owner:(anchor,ck)=>{
 		wsAPI.query.anchor.anchorOwner.entries().then((arr) => {
 			ck && ck(arr);
+		});
+	},
+	balance: (account, ck) => {
+		wsAPI.query.system.account(account,(res) => {
+			ck && ck(res);
+		})
+	},
+	listening: (ck) => {
+		wsAPI.rpc.chain.subscribeFinalizedHeads((lastHeader) => {
+			const lastHash = lastHeader.hash.toHex();
+			wsAPI.rpc.chain.getBlock(lastHash).then((dt) => {
+				const ans = self.filter(dt,'setAnchor');
+				const list = [];
+				for (let i = 0; i < ans.length; i++) {
+					// const row = ans[i];
+					// const account = row.signature.signer.id;
+					// const key = tools.hex2str(row.method.args.key);
+					// const adata = row.method.args;
+					// const obj = {
+					// 	block: lastHeader.number,
+					// 	account: account,
+					// 	anchor: key,
+					// 	raw: adata.raw,
+					// 	protocol: JSON.parse(tools.hex2str(adata.protocol)),
+					// }
+					// list.push(obj);
+				}
+				ck && ck(list);
+			});
 		});
 	},
 };
