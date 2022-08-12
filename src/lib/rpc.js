@@ -6,9 +6,10 @@ const config={
 	endpoint:'ws://localhost:9944',
 	entry:'anchor',
 };
+
 let wsAPI=null;
 const self={
-	link: (ck) => {
+	link:(ck) => {
 		if (wsAPI === null) {
 			const wsPvd = new WsProvider(config.endpoint);
 			ApiPromise.create({ provider: wsPvd }).then((api) => {
@@ -60,11 +61,14 @@ const self={
 };
 
 const RRR={
-	getEntry:function(ck){
+	init:function(ck){
 		self.search(config.entry,function(res){
+			Direct.set.websocket(wsAPI);
+			RRR.link=wsAPI;
 			ck && ck(res);
 		});
 	},
+	link:null,
 	direct:Direct,
 	gateway:Gateway,
 };

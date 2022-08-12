@@ -11,8 +11,22 @@ Direct link and gateway are both support by vExplorer. App get entry list for an
 
 ## Foramt type
 
-## Data
+### data format
 
 ```JSON
 {"type":"data","format":"JSON"}
+```
+
+### data encode
+
+Default is ASCII, if declare the code format, will decode by it.
+
+```JSON
+{"type":"data","code":"UTF-8"}
+```
+
+### extend 
+
+```JSON
+{"type":"data","ext":{"ref":"hello","owner":"SS58_account"}}
 ```

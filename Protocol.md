@@ -8,3 +8,12 @@
     "gateway":["http://gateway.metanchor.net"],
 }
 ```
+
+## Protocol
+协议来定义不同的数据，用于实现不同的功能；
+### Data
+
+### App
+
+### Creation
+

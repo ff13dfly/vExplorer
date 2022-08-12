@@ -12,9 +12,7 @@ import ListSell from './common/listSell';
 import Error from './common/error';
 
 import { ApiPromise, WsProvider,Keyring } from '@polkadot/api';
-//import { stringToU8a } from '@polkadot/util'
 import { encodeAddress } from '@polkadot/util-crypto';
-//import { Skeleton } from 'three';
 
 //import $ from 'jquery';
 /************ test import *************/
@@ -163,115 +161,6 @@ function App(props) {
                 });
             });
 
-        },
-        historyAnchor:function(anchor,ck){
-            let unsub=null;
-            wsAPI.query.anchor.anchorOwner(anchor, (res) => {
-                if (res.isEmpty) return ck && ck(false);
-                const block = res.value[1].words[0];
-                //console.log(block);
-                API.getTargetAnchor(anchor,block,function(list){
-                    console.log(list);
-                    unsub();
-                });
-            }).then((un)=>{
-                unsub=un;
-            });
-        },
-
-        getAnchorData:(dt,method)=>{
-            let arr = [];
-            dt.block.extrinsics.forEach((ex, index) => {
-                const dt=ex.toHuman();
-                if (index !== 0 && dt.method.method === method) {
-                    arr.push(dt.method);
-                }
-            });
-            return arr;
-        },
-        getTargetAnchor:function(anchor,block,ck,list){
-            if(!list) list=[];
-            wsAPI.rpc.chain.getBlockHash(block,function(res){
-                const hash = res.toHex();
-                //获取anchor的内容，会出现同一block里保存了多个anchor的情况，需要按名称进行筛选
-                wsAPI.rpc.chain.getBlock(hash).then((dt) => {
-                    if (dt.block.extrinsics.length === 1) return ck && ck(false);
-                    const ans = API.getAnchorData(dt,'setAnchor');
-                    let raw=null;
-                    for (let i = 0; i < ans.length; i++) {
-                        const data = ans[i].args;
-                        if(data.key!== anchor) continue;
-                        raw= data
-                    }
-
-                    wsAPI.query.system.events.at(hash,function(events){
-                        events.forEach(({event}) => {
-                            const info=API.decodeEvent(event);
-                            if(info===false) return false;
-
-                            info.block=block;
-                            if(raw!=null) info.data=raw;
-                            list.push(info);
-
-                            if(info.pre===0) return ck && ck(list);
-                            else return API.getTargetAnchor(anchor,info.pre,ck,list);
-                        });
-                    });
-                });
-            });
-        },
-        decodeEvent:function(event){
-            //使用event的method，可以避免index带来的默认值调整
-            var preter={
-                "AnchorSet":API.deSet,
-                "AnchorToSell":API.deSell,
-                "AnchorSold":API.deBuy,
-                "AnchorUnSell":API.deUnsell,
-            }
-            const method=event.method;
-            if(!preter[method]) return false;
-            //console.log(event.toHuman());
-            return preter[method](event.data);
-        },
-        deSet:function(data){
-            const dt=data.toHuman();
-            return {
-                owner:dt[0],
-                pre:parseInt(dt[1].replace(/,/gi, '')),
-                action:'set',
-            }
-        },
-        deSell:function(data){
-            const dt=data.toHuman();
-            return {
-                owner:dt[0],
-                pre:parseInt(dt[3].replace(/,/gi, '')),
-                action:'sell',
-                extra:{
-                    price:dt[1],
-                    to:dt[2],
-                }
-            }
-        },
-        deBuy:function(data){
-            const dt=data.toHuman();
-            return {
-                owner:dt[0],
-                pre:parseInt(dt[3].replace(/,/gi, '')),
-                action:'buy',
-                extra:{
-                    from:dt[1],
-                    price:dt[2],
-                }
-            }
-        },
-        deUnsell:function(data){
-            const dt=data.toHuman();
-            return {
-                owner:dt[0],
-                pre:parseInt(dt[1].replace(/,/gi, '')),
-                action:'unsell',
-            }
         },
         viewAnchor: (block, name, owner, ck) => {
             wsAPI.rpc.chain.getBlockHash(block, (res) => {
@@ -493,7 +382,7 @@ function App(props) {
                 const owner = dt.owner;
                 const block = dt.blocknumber;
 
-                API.viewAnchor(block, name, owner, (res) => {
+                RRR.direct.view(block, name, owner, (res) => {
                     if (!res.protocol) {
                         setResult(< Error data='No data to show.' />);
                     } else {
@@ -552,107 +441,6 @@ function App(props) {
         handleShow: () => {
             setShow(true);
         },
-
-        test_unsub:function(){
-
-            setTimeout(() => {
-                let unsub=null;
-                const keyring = new Keyring({type: 'sr25519'});
-                const alice = keyring.addFromUri('//Alice');
-                const anchor='test_sub';
-                wsAPI.tx.anchor.setAnchor(anchor,'hello sub',JSON.stringify({type:"data"})).signAndSend(alice,(res) => {
-                    var status=res.status;
-                    console.log(`Writing status is ${status.type}`);
-                    console.log('Status:'+JSON.stringify(status)+',type:'+status.type);
-                    if(status.type==='Finalized'){
-
-                        wsAPI.query.anchor.anchorOwner(anchor, (dt) => {
-                            const block = dt.value[1].words[0];
-                            const msg={
-                                'success':'setAnchor successful',
-                                'block':block,
-                            }
-                            console.log(msg);
-                            console.log(unsub);
-                            unsub();
-                            
-                        }).then((uuu)=>{
-                            console.log('anchorOwner unsub:');
-                            console.log(uuu)
-                        });
-                    }
-                }).then((un)=>{
-                    console.log(typeof un);
-                    unsub=un;
-                });
-            }, 3000);
-        },
-
-        test_events:function(){
-            wsAPI.query.system.events((events)=>{
-                events.forEach((record) => {
-                    // Extract the phase, event and the event types
-                    const { event, phase } = record;
-                    const types = event.typeDef;
-              
-                    // Show what we are busy with
-                    console.log(`\t${event.section}:${event.method}:: (phase=${phase.toString()})`);
-                    //console.log(`\t\t${event.meta.documentation.toString()}`);
-              
-                    // Loop through each of the parameters, displaying the type and data
-                    event.data.forEach((data, index) => {
-                      console.log(`\t\t\t${types[index].type}: ${data.toString()}`);
-                    });
-                });
-            });
-
-            const block = 39;
-            wsAPI.rpc.chain.getBlockHash(block,function(res){
-                const hash = res.toHex();
-                wsAPI.query.system.events.at(hash,function(events){
-                    events.forEach(({event}) => {
-                        console.log(event.index.toHex());
-                        console.log(event.data.toHuman())
-                        console.log(`Event: ${JSON.stringify(event)}`);
-                    });
-                });
-                
-                //console.log(wsAPI.query.system.events);
-                wsAPI.query.system.events((evs)=>{
-                    evs.forEach((ev)=>{
-                        if(ev.phase.isApplyExtrinsic){
-                            const index=ev.event.index.toHuman();
-                            if(index==='0x1d00'){
-                                console.log(ev.event.data);
-                                console.log(ev.event.data[1].words[0]);
-                                console.log(ev.event.data.method);
-                            }
-                            //console.log(JSON.stringify(ev))
-                        }
-                    });
-                });
-            });
-        },
-        test_history:function(){
-            //console.log(wsAPI.tx.anchor)
-            var name='hello';
-            API.historyAnchor(name,function(list){
-                console.log(list);
-            });
-        },
-        test_sub_anchor:function(){
-            // wsAPI.query.system.is('setAnchor',function(res){
-            //     console.log(res);
-            // })
-            //console.log();
-        },
-        test_rpc:function(){
-            console.log(RRR);
-            RRR.getEntry(function(dt){
-                console.log('Information from test_rpc in file app.js');
-                console.log(dt);
-            });
-        },
     }
 
     let [dom, setDom] = useState((< Search wsAPI={wsAPI} onCheck={self.anchorCheck}/>));
@@ -664,11 +452,10 @@ function App(props) {
     let [market, setMarket] = useState(< Error data={'Linking to ' + server + '...'}/>);
 
     useEffect(() => {
-        API.link(server, () => {
-            //self.test_history();
-            //self.test_sub_anchor();
-            self.test_rpc();
-            setMarket((< ListSell wsAPI={wsAPI} buy={self.buy} tools={tools} />));
+        RRR.init(function(dt){
+            console.log('Information from test_rpc in file app.js');
+            console.log('Entry:'+JSON.stringify(dt));
+            setMarket((< ListSell wsAPI={RRR.link} buy={RRR.direct.buy} tools={tools} />));
         });
     }, []);
 
