@@ -1,11 +1,10 @@
 
 import { Row,Col,Button} from 'react-bootstrap';
-
-//import { useState } from 'react';
+import tools from '../lib/tools.js';
 
 function Block(props) {
   const list = props.data;
-  const shorten=props.tools.shortenAddress;
+  const shorten=tools.shortenAddress;
 
   const skey=props.keys.anchorList;
   const self={

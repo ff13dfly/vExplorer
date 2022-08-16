@@ -1,23 +1,42 @@
-import { useState } from 'react';
+import { Row, Col,Form} from 'react-bootstrap';
+import { useEffect } from 'react';
+
+import RPC from '../lib/rpc.js';
+
+const self={
+  changeWay:()=>{
+
+  },
+  changeEndpoint:()=>{
+
+  },
+};
 
 function Server(props) {
+  console.log(props.setEntry)
 
-    return (
-        <Row>
-        <Navbar bg="light" expand="lg">
-          <Container>
-            <Navbar.Brand href="#home">Meta Anchor</Navbar.Brand>
-            <Navbar.Toggle aria-controls="basic-navbar-nav" />
-            <Navbar.Collapse id="basic-navbar-nav">
-              <Nav className="me-auto">
-                <Nav.Link href="#home" onClick = { self.routerHome }>Home</Nav.Link>
-                <Nav.Link href="#account" onClick = { self.routerAccount }>Account</Nav.Link>
-              </Nav>
-            </Navbar.Collapse>
-          </Container>
-        </Navbar>
-        <Col lg = { 12 } xs = { 12 } className = "pt-2" >{dom}</Col>
-        </Row>
-    );
+  useEffect(() => {
+    RPC.init((dt)=>{
+      const list=dt.data.raw;
+      console.log(list);
+    });
+  }, []);
+
+  return (
+      <Row  className = "pt-2">
+        <Col lg = { 5 } xs = { 12 } className = "pt-2" >
+        <Form.Control as="select"  onChange={self.changeWay}>
+          <option value="red">Red</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+          <option value="black">Black</option>
+          <option value="orange">Orange</option>
+        </Form.Control>
+        </Col>
+        <Col lg = { 7 } xs = { 12 } className = "pt-2" >
+          <Form.Control size = "lg" type = "text" placeholder = "Anchor name..."/>
+        </Col>
+      </Row>
+  );
 }
 export default Server;

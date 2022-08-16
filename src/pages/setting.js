@@ -4,8 +4,9 @@ import { useState } from 'react';
 import Importer from '../common/importer';
 import AccountAdd from '../common/accountAdd';
 import User from '../common/user';
+import Server from '../common/server';
 
-function Account(props) {
+function Setting(props) {
 	const k=props.keys.jsonFile;
 
 	const self={
@@ -35,8 +36,9 @@ function Account(props) {
     	<Container>
     		{dom}
 			{add}
+			<Server setEntry={props.setEntry}/>
     	</Container>
     );
 }
 
-export default Account;
+export default Setting;

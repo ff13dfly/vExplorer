@@ -2,7 +2,7 @@ import { Navbar, Container, Nav, Row, Col, Modal } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 
 import Search from './pages/search';
-import Account from './pages/account';
+import Setting from './pages/setting';
 import Docs from './pages/docs';
 import Anchor from './pages/anchor';
 import Buy from './common/buy';
@@ -12,35 +12,28 @@ import ListSell from './common/listSell';
 import Error from './common/error';
 
 import RPC from './lib/rpc.js';
-import tools from './lib/tools.js';
-
-import $ from 'jquery';		//JSONP的实现
-
-/************ test import *************/
 
 function App(props) {
-    
-
     const keys = {
         jsonFile: 'js_file_name',
         anchorList: 'anchor_list',
     }
 
     let cur = 'home';
+
+    let entry={
+        way:'node',
+        index:0,
+    };
+
     let [content, setContent] = useState('');
     let [show, setShow] = useState(false);
   
     const self = {
-        /*路由响应部分的方法，获取不同的页面ss*/
         router: () => {
-            self.getDom(cur);
+            self.render(cur);
         },
-        clean: () => {
-            setResult('');
-            setOnsell('');
-        },
-
-        getDom: (router) => {
+        render: (router) => {
             self.clean();
             switch (router) {
                 case 'home':
@@ -61,13 +54,13 @@ function App(props) {
                         onCheck={self.isOwner}
                         onSell={self.sell}
                         onUpdate={self.update}
-                        tools={tools} />));
+                        />));
                     break;
 
-                case 'account':
+                case 'setting':
                     setMarket('');
-                    setDom((< Account keys={keys}
-                        onCheck={(name) => { self.check(name) }} balance={RPC.direct.balance}
+                    setDom((< Setting keys={keys}
+                        onCheck={(name) => { self.check(name) }} balance={RPC.direct.balance} setEntry={self.setEntry}
                     />));
                     break;
 
@@ -76,15 +69,14 @@ function App(props) {
                     break;
             }
         },
+
         update: (anchor) => {
             self.isOwner(anchor, (res) => {
                 if (res === false) return false;
                 const k = keys.jsonFile;
-
                 setContent((< Sign accountKey={k}
                     callback={
                         (pair, name, ext) => {
-                            //console.log('call Sign callback');
                             RPC.direct.write(pair, name, ext, (res) => {
                                 //会返回3次结果，最后一次的isFinalized为true才是写入到了链里   
                                 self.handleClose();
@@ -140,16 +132,7 @@ function App(props) {
                 });
 
                 //3.实现anchor的购买
-                self.init(anchor, (dt) => {
-                    console.log(dt);
-                });
-            });
-        },
-        init: (anchor, ck) => {
-            const k = keys.jsonFile;
-            if (localStorage.getItem(k) == null) {
-                return ck && ck(false);
-            } else {
+                const k = keys.jsonFile;
                 setContent(
                     (< Sign accountKey={k}
                         callback={
@@ -163,7 +146,7 @@ function App(props) {
                     />)
                 );
                 setTitle((<span className="text-warning" > {anchor}</span>)); self.handleShow();
-            }
+            });
         },
         vertify:(anchor,raw,protocol,ck)=>{
             const k = keys.jsonFile;
@@ -235,19 +218,22 @@ function App(props) {
                 ck && ck(dt.owner === address ? dt : false);
             });
         },
-
-
-        handleClose: () => {
-            setShow(false);
-        },
-        handleShow: () => {
-            setShow(true);
-        },
         getAddress: () => {
             const str = localStorage.getItem(keys.jsonFile);
             const acc = str === null ? false : JSON.parse(str);
             return acc === false ? false : acc.address;
         },
+        clean: () => {
+            setResult('');
+            setOnsell('');
+        },
+        setEntry:(way,index)=>{
+            entry.way=way;
+            entry.index=parseInt(index);
+            return true;
+        },
+        handleClose: () => {setShow(false);},
+        handleShow: () => {setShow(true);},
     }
 
     const agent = {
@@ -268,23 +254,20 @@ function App(props) {
     const test={
         gateway:()=>{
             RPC.gateway.init.spam((res)=>{
-                console.log(res);
                 const anchor='hello';
-                RPC.gateway.history(anchor,(his)=>{
+                RPC.gateway.view(anchor,(his)=>{
                     console.log(his);
-                    
                 });
             });
         },
     };
     useEffect(() => {
         RPC.init((dt)=>{
-            console.log('Information from test_rpc in file app.js');
-            console.log('Entry:'+JSON.stringify(dt));
-            console.log(RPC);
-            // RPC.direct.history('hello',(res)=>{
-            //     console.log(res);
-            // });
+            //console.log('Information from test_rpc in file app.js');
+            //console.log('Entry:'+JSON.stringify(dt));
+            RPC.direct.history('hello',(res)=>{
+                console.log(res);
+            });
             RPC.gateway.init.endpoint(RPC.select.gateway[0]);
             RPC.gateway.init.account(self.getAddress());
             test.gateway();
@@ -320,13 +303,13 @@ function App(props) {
                                 self.router();
                             }
                         } > Docs </Nav.Link>
-                    <Nav.Link href="#account"
+                    <Nav.Link href="#setting"
                         onClick={
                             () => {
-                                cur = 'account';
+                                cur = 'setting';
                                 self.router();
                             }
-                        } > Account </Nav.Link>
+                        } > Setting </Nav.Link>
                 </Nav> </Navbar.Collapse> </Container> </Navbar>
         <Row>
         <Col lg={12} xs={12} className="pt-2"> {dom} </Col>

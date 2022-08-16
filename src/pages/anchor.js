@@ -46,7 +46,13 @@ function Anchor(props) {
 	    	}
 	    	if(list.length===0) return '';
 
-	    	return (<Block data={list} onSell={props.onSell}  onUpdate={props.onUpdate} fresh={self.fresh} keys={props.keys} tools={props.tools}/>);
+	    	return (<Block 
+				data={list} 
+				onSell={props.onSell}  
+				onUpdate={props.onUpdate} 
+				fresh={self.fresh} 
+				keys={props.keys}
+			/>);
 	    },
 	}
 

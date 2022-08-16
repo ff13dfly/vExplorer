@@ -22,7 +22,12 @@ const self = {
             ck && ck(res);
         });
     },
+    charge:(amount,ck)=>{
 
+    },
+    free:(content,ck)=>{
+
+    },
     view:(anchor,ck)=>{
         const json={
             "id":"",
@@ -93,9 +98,9 @@ const Gateway={
     },
 	search:function(anchor,ck){},
 	view:self.view,
-	write:function(anchor,data,ck){},
 	history:self.history,
-    sell:function(){},
-    buy:function(){},
-}
+    charge:self.charge,
+    free:self.free,
+};
+
 export default Gateway;
