@@ -5,6 +5,7 @@ import Search from './pages/search';
 import Setting from './pages/setting';
 import Docs from './pages/docs';
 import Anchor from './pages/anchor';
+
 import Buy from './common/buy';
 import Detail from './common/detail';
 import Sign from './common/sign';
@@ -18,9 +19,7 @@ function App(props) {
         jsonFile: 'js_file_name',
         anchorList: 'anchor_list',
     }
-
     let cur = 'home';
-
     let entry={
         way:'node',
         index:0,
@@ -126,13 +125,24 @@ function App(props) {
 
                 //2.检查用户的balance;
                 RPC.direct.balance(address, (res) => {
+
+                    //这边比较完了，再执行buy的部分
                     console.log(res.data.free);
                     console.log(res.data.free.toString());
                     console.log(res.data.free.toBigInt());
-                });
 
-                //3.实现anchor的购买
-                const k = keys.jsonFile;
+                    //3.实现anchor的购买
+                    self.doBuy(anchor,(res)=>{
+                        console.log(res);
+                    });
+                });
+            });
+        },
+        doBuy : (anchor, ck) => {
+            const k = keys.jsonFile;
+            if (localStorage.getItem(k) == null) {
+                return ck && ck(false);
+            } else {
                 setContent(
                     (< Sign accountKey={k}
                         callback={
@@ -146,7 +156,7 @@ function App(props) {
                     />)
                 );
                 setTitle((<span className="text-warning" > {anchor}</span>)); self.handleShow();
-            });
+            }
         },
         vertify:(anchor,raw,protocol,ck)=>{
             const k = keys.jsonFile;
@@ -182,7 +192,7 @@ function App(props) {
         optResult: (dt) => {
             if (dt.owner === 0) {
                 setResult(< Buy anchor={dt.anchor}
-                    setAnchor={self.init}
+                    buy={self.doBuy}
                 />);
                 setOnsell('');
             }else{
@@ -191,7 +201,6 @@ function App(props) {
                 const block = dt.blocknumber;
 
                 RPC.direct.view(block, name, owner, (res) => {
-                    //console.log(res);
                     if (!res || !res.raw.protocol) {
                         setResult(< Error data='No data to show.' />);
                     } else {
