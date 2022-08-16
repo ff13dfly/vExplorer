@@ -39,7 +39,7 @@ const self={
 							if(data.key!== anchor) continue;
 							if(data.protocol) data.protocol=JSON.parse(data.protocol);
 							if(data.protocol.type === "data" && data.protocol.format === "JSON") data.raw=JSON.parse(data.raw);
-							result.raw=data;
+							result.data=data;
 						}
 						ck && ck(result);
 					});
@@ -63,11 +63,15 @@ const self={
 const RPC={
 	init:function(ck){
 		self.search(config.entry,function(res){
+			//console.log(res);
+			RPC.select=res.data.raw;
+			//1.处理好direct的部分；
 			Direct.set.websocket(wsAPI);
 			RPC.link=wsAPI;
 			ck && ck(res);
 		});
 	},
+	select:{},		//当前的选择结构
 	link:null,
 	direct:Direct,
 	gateway:Gateway,

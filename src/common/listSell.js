@@ -6,15 +6,11 @@ import { Container,Button,Row,Col } from 'react-bootstrap';
 import tools from '../lib/tools.js';
 
 function ListSell(props) {
-	const RPC=props.wsAPI.query.anchor.sellList;
 	const shorten=tools.shortenAddress;
-
 	let [list, setList] = useState([]);
 
 	useEffect(() => {
-        RPC.entries().then((arr)=>{
-			setList(arr);
-		});
+        setList(props.list);
     },[]);
 
 	return (

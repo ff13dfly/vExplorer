@@ -135,7 +135,7 @@ const self = {
             pre:parseInt(dt[3].replace(/,/gi, '')),
             action:'sell',
             extra:{
-                price:dt[1],
+                price:dt[1].replace(/,/gi, ''),
                 to:dt[2],
             }
         };
@@ -148,7 +148,7 @@ const self = {
             action:'buy',
             extra:{
                 from:dt[1],
-                price:dt[2],
+                price:dt[2].replace(/,/gi, ''),
             }
         };
     },
@@ -228,6 +228,7 @@ const Direct={
         account:self.setAccount,
         websocket:self.setWebsocket,
     },
+	balance:self.balance,
 	search:self.search,
 	view:self.view,
 	history:self.history,

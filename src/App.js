@@ -14,23 +14,22 @@ import Error from './common/error';
 import RPC from './lib/rpc.js';
 import tools from './lib/tools.js';
 
+import $ from 'jquery';		//JSONP的实现
+
 /************ test import *************/
 
-
-let wsAPI = null;
 function App(props) {
+    
+
     const keys = {
         jsonFile: 'js_file_name',
         anchorList: 'anchor_list',
-        rpcEndpoint: 'rpc.php',
     }
 
+    let cur = 'home';
     let [content, setContent] = useState('');
     let [show, setShow] = useState(false);
-
-
-
-    let cur = 'home';
+  
     const self = {
         /*路由响应部分的方法，获取不同的页面ss*/
         router: () => {
@@ -40,35 +39,16 @@ function App(props) {
             setResult('');
             setOnsell('');
         },
-        vertify:(anchor,raw,protocol,ck)=>{
-            const k = keys.jsonFile;
-            setContent(
-                (< Sign accountKey={k}
-                    callback={
-                        (pair, name , ext) => {
-                            console.log(ext);
-                            const data={raw:raw,protocol:protocol}
-                            RPC.direct(pair,anchor,data,(res)=>{
-                                setShow(false);
-                                ck && ck(res);
-                            })
-                        }
-                    }
-                    anchor={anchor}
-                />)
-            );
-            setTitle((<span className="text-warning" > {anchor}</span>));
-            setShow(true);
-        },
+
         getDom: (router) => {
             self.clean();
             switch (router) {
                 case 'home':
-                    setMarket((< ListSell wsAPI={wsAPI}
-                        buy={self.buy}
-                    />));
+                    RPC.direct.market((list)=>{
+                        setMarket((< ListSell  list={list} buy={self.buy} />));
+                    });
                     setDom((< Search onCheck={
-                        (name) => { self.anchorCheck(name) }}
+                        (name) => { self.check(name) }}
                     />));
                     break;
 
@@ -79,28 +59,26 @@ function App(props) {
                 case 'anchor':
                     setMarket(''); setDom((< Anchor keys={keys}
                         onCheck={self.isOwner}
-                        onSell={self.anchorSell}
-                        onUpdate={self.anchorUpdate}
+                        onSell={self.sell}
+                        onUpdate={self.update}
                         tools={tools} />));
                     break;
 
                 case 'account':
                     setMarket('');
                     setDom((< Account keys={keys}
-                        onCheck={(name) => { self.anchorCheck(name) }} balance={self.getBalance}
+                        onCheck={(name) => { self.check(name) }} balance={RPC.direct.balance}
                     />));
                     break;
 
                 default:
-                    setMarket(''); setDom((< Search onCheck={(name) => { self.anchorCheck(name) }} />));
+                    setMarket(''); setDom((< Search onCheck={(name) => { self.check(name) }} />));
                     break;
             }
         },
-        anchorUpdate: (anchor) => {
-            //console.log('call self.anchorUpdate');
+        update: (anchor) => {
             self.isOwner(anchor, (res) => {
                 if (res === false) return false;
-
                 const k = keys.jsonFile;
 
                 setContent((< Sign accountKey={k}
@@ -124,7 +102,7 @@ function App(props) {
             });
         },
 
-        anchorSell: (anchor) => {
+        sell: (anchor) => {
             self.isOwner(anchor, (res) => {
                 if (res === false) return false;
                 const k = keys.jsonFile;
@@ -155,73 +133,19 @@ function App(props) {
                 if (menu.cost !== cost) return false;
 
                 //2.检查用户的balance;
-                self.getBalance(address, (res) => {
+                RPC.direct.balance(address, (res) => {
                     console.log(res.data.free);
                     console.log(res.data.free.toString());
                     console.log(res.data.free.toBigInt());
                 });
 
                 //3.实现anchor的购买
-                self.initAnchor(anchor, (dt) => {
+                self.init(anchor, (dt) => {
                     console.log(dt);
                 });
             });
         },
-        anchorCheck: (anchor) => {
-            if (!anchor) {
-                setResult('');
-                setMarket((< ListSell wsAPI={wsAPI}
-                    buy={self.buy}
-                    tools={tools}
-                />));
-                return false;
-            }
-
-            setMarket(''); RPC.direct.search(anchor, self.optAnchorResult);
-        },
-        optAnchorResult: (dt) => {
-            console.log(dt);
-            if (dt.owner === 0) {
-                setResult(< Buy anchor={dt.anchor}
-                    setAnchor={self.initAnchor}
-                />);
-                setOnsell('');
-            }else{
-                const name = dt.anchor;
-                const owner = dt.owner;
-                const block = dt.blocknumber;
-
-                RPC.direct.view(block, name, owner, (res) => {
-                    //console.log(res);
-                    if (!res || !res.raw.protocol) {
-                        setResult(< Error data='No data to show.' />);
-                    } else {
-                        setResult(< Detail anchor={name}
-                            raw={res.raw}
-                            protocol={res.raw.protocol}
-                            owner={dt.owner}
-                            block={block}
-                            link={wsAPI}
-                            tools={tools}
-                            agent={agent}
-                        />);
-                    }
-                });
-            }
-        },
-        isSelling: (anchor, ck) => {
-            RPC.direct.search(anchor, (dt) => {
-                ck && ck(dt);
-            });
-        },
-        isOwner: (anchor, ck) => {
-            const address = self.getAddress();
-            if (!address) return ck && ck(false);
-            RPC.direct.search(anchor, (dt) => {
-                ck && ck(dt.owner === address ? dt : false);
-            });
-        },
-        initAnchor: (anchor, ck) => {
+        init: (anchor, ck) => {
             const k = keys.jsonFile;
             if (localStorage.getItem(k) == null) {
                 return ck && ck(false);
@@ -241,6 +165,77 @@ function App(props) {
                 setTitle((<span className="text-warning" > {anchor}</span>)); self.handleShow();
             }
         },
+        vertify:(anchor,raw,protocol,ck)=>{
+            const k = keys.jsonFile;
+            setContent(
+                (< Sign accountKey={k}
+                    callback={
+                        (pair, name , ext) => {
+                            console.log(ext);
+                            const data={raw:raw,protocol:protocol}
+                            RPC.direct(pair,anchor,data,(res)=>{
+                                setShow(false);
+                                ck && ck(res);
+                            })
+                        }
+                    }
+                    anchor={anchor}
+                />)
+            );
+            setTitle((<span className="text-warning" > {anchor}</span>));
+            setShow(true);
+        },
+        check: (anchor) => {
+            if (!anchor) {
+                setResult('');
+                RPC.direct.market((list)=>{
+                    setMarket((< ListSell  list={list} buy={self.buy} />));
+                });
+                return false;
+            }
+
+            setMarket(''); RPC.direct.search(anchor, self.optResult);
+        },
+        optResult: (dt) => {
+            if (dt.owner === 0) {
+                setResult(< Buy anchor={dt.anchor}
+                    setAnchor={self.init}
+                />);
+                setOnsell('');
+            }else{
+                const name = dt.anchor;
+                const owner = dt.owner;
+                const block = dt.blocknumber;
+
+                RPC.direct.view(block, name, owner, (res) => {
+                    //console.log(res);
+                    if (!res || !res.raw.protocol) {
+                        setResult(< Error data='No data to show.' />);
+                    } else {
+                        setResult(< Detail anchor={name}
+                            raw={res.raw}
+                            protocol={res.raw.protocol}
+                            owner={dt.owner}
+                            block={block}
+                            agent={agent}
+                        />);
+                    }
+                });
+            }
+        },
+        isSelling: (anchor, ck) => {
+            RPC.direct.search(anchor, (dt) => {
+                ck && ck(dt);
+            });
+        },
+        isOwner: (anchor, ck) => {
+            const address = self.getAddress();
+            if (!address) return ck && ck(false);
+            RPC.direct.search(anchor, (dt) => {
+                ck && ck(dt.owner === address ? dt : false);
+            });
+        },
+
 
         handleClose: () => {
             setShow(false);
@@ -262,7 +257,7 @@ function App(props) {
         vertify:self.vertify,
     }
 
-    let [dom, setDom] = useState((< Search wsAPI={wsAPI} onCheck={self.anchorCheck}/>));
+    let [dom, setDom] = useState((< Search onCheck={self.check}/>));
     let [result, setResult] = useState('');
 
     let [title, setTitle] = useState('');
@@ -270,16 +265,32 @@ function App(props) {
     let [onsell, setOnsell] = useState('');
     let [market, setMarket] = useState(< Error data={'Linking ...'}/>);
 
+    const test={
+        gateway:()=>{
+            RPC.gateway.init.spam((res)=>{
+                console.log(res);
+                const anchor='hello';
+                RPC.gateway.history(anchor,(his)=>{
+                    console.log(his);
+                    
+                });
+            });
+        },
+    };
     useEffect(() => {
-        RPC.init(function(dt){
+        RPC.init((dt)=>{
             console.log('Information from test_rpc in file app.js');
             console.log('Entry:'+JSON.stringify(dt));
-            wsAPI=RPC.link;
-            RPC.direct.history('hello',function(res){
-                console.log(res);
+            console.log(RPC);
+            // RPC.direct.history('hello',(res)=>{
+            //     console.log(res);
+            // });
+            RPC.gateway.init.endpoint(RPC.select.gateway[0]);
+            RPC.gateway.init.account(self.getAddress());
+            test.gateway();
+            RPC.direct.market((list)=>{
+                setMarket((< ListSell  list={list} buy={self.buy} />));
             });
-
-            setMarket((< ListSell wsAPI={wsAPI} buy={RPC.direct.buy} tools={tools} />));
         });
     }, []);
 

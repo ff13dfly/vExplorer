@@ -39,8 +39,6 @@ function Detail(props) {
         owner={owner} 
         block={block}
         protocol={props.protocol}
-        link={props.link} 
-        tools={props.tools} 
         agent={props.agent}/>
       );
     break;
