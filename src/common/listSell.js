@@ -28,7 +28,6 @@ function ListSell(props) {
 			</Col>
 			</Row>
 		))}
-      	
     </Container>
 	);
 }

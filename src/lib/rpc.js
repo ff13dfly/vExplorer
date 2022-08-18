@@ -3,7 +3,7 @@ import Direct from './direct';
 import Gateway from './gateway';
 
 const config={
-	endpoint:'ws://localhost:9944',
+	endpoint:'',
 	entry:'anchor',
 };
 
@@ -58,19 +58,28 @@ const self={
         });
         return arr;
 	},
+	setEndpoint:(uri)=>{
+		config.endpoint=uri;	//初始化传入的RPC地址
+	},
+	getEndpoint:()=>{
+		return config.endpoint;
+	},
 };
 
 const RPC={
 	init:function(ck){
+		if(!config.endpoint) return ck && ck({error:"no endpoint to link"});
 		self.search(config.entry,function(res){
 			//console.log(res);
-			RPC.select=res.data.raw;
+			if(res.data && res.data.raw)RPC.select=res.data.raw;
 			//1.处理好direct的部分；
 			Direct.set.websocket(wsAPI);
 			RPC.link=wsAPI;
 			ck && ck(res);
 		});
 	},
+	setStart:self.setEndpoint,
+	getStart:self.getEndpoint,
 	select:{},		//当前的选择结构
 	link:null,
 	direct:Direct,

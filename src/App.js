@@ -18,7 +18,9 @@ function App(props) {
     const keys = {
         jsonFile: 'js_file_name',
         anchorList: 'anchor_list',
+        startNode:'start_node',
     }
+    const defaultStart='ws://localhost:9944';
     let cur = 'home';
     let entry={
         way:'node',
@@ -209,7 +211,6 @@ function App(props) {
                             protocol={res.raw.protocol}
                             owner={dt.owner}
                             block={block}
-                            agent={agent}
                         />);
                     }
                 });
@@ -241,22 +242,22 @@ function App(props) {
             entry.index=parseInt(index);
             return true;
         },
+        getStart:()=>{
+            const uri=localStorage.getItem(keys.startNode);
+            if(uri!==null) return uri;
+            self.setStart(defaultStart);
+            return defaultStart;
+        },
+        setStart:(uri)=>{
+            localStorage.setItem(keys.startNode,uri);
+        },
         handleClose: () => {setShow(false);},
         handleShow: () => {setShow(true);},
     }
 
-    const agent = {
-        search: RPC.direct.search,
-        view: RPC.direct.view,
-        write: RPC.direct.write,
-        vertify:self.vertify,
-    }
-
     let [dom, setDom] = useState((< Search onCheck={self.check}/>));
     let [result, setResult] = useState('');
-
     let [title, setTitle] = useState('');
-
     let [onsell, setOnsell] = useState('');
     let [market, setMarket] = useState(< Error data={'Linking ...'}/>);
 
@@ -270,16 +271,23 @@ function App(props) {
             });
         },
     };
+    
     useEffect(() => {
+        const uri=self.getStart();
+        RPC.setStart(uri);
         RPC.init((dt)=>{
             //console.log('Information from test_rpc in file app.js');
             //console.log('Entry:'+JSON.stringify(dt));
             RPC.direct.history('hello',(res)=>{
                 console.log(res);
             });
-            RPC.gateway.init.endpoint(RPC.select.gateway[0]);
-            RPC.gateway.init.account(self.getAddress());
-            test.gateway();
+
+            if(RPC.select.gateway){
+                RPC.gateway.init.endpoint(RPC.select.gateway[0]);
+                RPC.gateway.init.account(self.getAddress());
+                test.gateway();
+            }
+            
             RPC.direct.market((list)=>{
                 setMarket((< ListSell  list={list} buy={self.buy} />));
             });

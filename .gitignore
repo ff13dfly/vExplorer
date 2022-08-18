@@ -2,9 +2,8 @@ lib/.DS_Store
 .DS_Store
 build
 node_modules
-
 package-lock.json
-
 yarn-error.log
 yarn.lock
+
 src/App_0812.js

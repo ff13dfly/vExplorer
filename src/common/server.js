@@ -1,41 +1,58 @@
-import { Row, Col,Form} from 'react-bootstrap';
-import { useEffect } from 'react';
+import { Row, Col,Form,Button} from 'react-bootstrap';
+import { useEffect,useState } from 'react';
+
+import ListNode from './listNode';
+import ListGateway from './listGateway';
 
 import RPC from '../lib/rpc.js';
 
 const self={
-  changeWay:()=>{
-
+  changeNode:(res)=>{
+    console.log(res.target.innerHTML);
   },
-  changeEndpoint:()=>{
-
+  changeGateway:(res)=>{
+    console.log(res.target.innerHTML);
+  },
+  fresh:()=>{
+    console.log('ready to link to new node');
   },
 };
 
 function Server(props) {
-  console.log(props.setEntry)
+
+  let [node, setNode] = useState('');
+  let [gateway, setGateway] = useState('');
 
   useEffect(() => {
     RPC.init((dt)=>{
       const list=dt.data.raw;
       console.log(list);
+      setNode((<ListNode change = {self.changeNode} list={list.node} start={RPC.getStart()}/>));
+      setGateway((<ListGateway change = {self.changeNode} list={list.gateway} start={RPC.getStart()}/>));
     });
   }, []);
 
   return (
       <Row  className = "pt-2">
+        <Col lg = { 12 } xs = { 12 } className = "pt-2" >
+          <label>Select direct link node</label>
+          {node}
+        </Col>
+        <Col lg = { 12 } xs = { 12 } className = "pt-4" ></Col>
+        <Col lg = { 12 } xs = { 12 } className = "pt-4" >
+        <Form.Check 
+        type="switch"
+        id="custom-switch"
+        label="Enable vGateway" 
+        size="lg"
+      />
+        </Col>
         <Col lg = { 5 } xs = { 12 } className = "pt-2" >
-        <Form.Control as="select"  onChange={self.changeWay}>
-          <option value="red">Red</option>
-          <option value="blue">Blue</option>
-          <option value="green">Green</option>
-          <option value="black">Black</option>
-          <option value="orange">Orange</option>
-        </Form.Control>
+          {gateway}
         </Col>
-        <Col lg = { 7 } xs = { 12 } className = "pt-2" >
-          <Form.Control size = "lg" type = "text" placeholder = "Anchor name..."/>
-        </Col>
+        <Col lg = { 12 } xs = { 12 } className = "pt-4 text-center">
+          <Button size = "lg" variant = "primary" onClick = { self.fresh } > Fresh </Button>{' '}
+        </Col> 
       </Row>
   );
 }

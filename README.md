@@ -6,7 +6,7 @@ This is an explorer for Anchor network which is base on Polkadot / Substrate.
 Direct link and gateway are both support by vExplorer. App get entry list for any anchor, default one is "anchor".
 
 ```JSON
-{"node":["ws://localhost:9944"],"gateway":["http://localhost/vGateway"]}
+{"node":["ws://localhost:9944","wss://network.metanchor.net"],"gateway":["http://localhost/vGateway","http://android.im/vGateway"]}
 ```
 
 ## Foramt type
