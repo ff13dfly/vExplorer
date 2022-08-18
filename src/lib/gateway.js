@@ -1,5 +1,5 @@
 import $ from 'jquery';		//JSONP的实现
-import JsonP from 'jsonp';
+//import JsonP from 'jsonp';
 
 let account='';
 let endpoint='';
@@ -91,16 +91,20 @@ const self = {
 };
 
 const Gateway={
-    init:{
+    set:{
         account:self.setAccount,
         endpoint:self.setEndpoint,
         spam:self.spam,
     },
-	search:function(anchor,ck){},
-	view:self.view,
-	history:self.history,
-    charge:self.charge,
-    free:self.free,
+    common:{
+        search:function(anchor,ck){},
+        view:self.view,
+        history:self.history,
+    },
+    extra:{
+        charge:self.charge,
+        free:self.free,
+    },
 };
 
 export default Gateway;

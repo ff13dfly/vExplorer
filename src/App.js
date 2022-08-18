@@ -1,11 +1,12 @@
 import { Navbar, Container, Nav, Row, Col, Modal } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 
-import Search from './pages/search';
+
+import Account from './pages/account';
 import Setting from './pages/setting';
-import Docs from './pages/docs';
 import Anchor from './pages/anchor';
 
+import Search from './common/search';
 import Buy from './common/buy';
 import Detail from './common/detail';
 import Sign from './common/sign';
@@ -20,11 +21,13 @@ function App(props) {
         anchorList: 'anchor_list',
         startNode:'start_node',
     }
-    const defaultStart='ws://localhost:9944';
-    let cur = 'home';
-    let entry={
-        way:'node',
-        index:0,
+    let cur = 'home';   
+    let start={
+        account:'',                     //使用的连接账号
+        node:'ws://localhost:9944',     //连接的入口node
+        anchor:'anchor',                //entry anchor
+        gateway:false,                  //使用启用gateway
+        server:'',                      //gateway的URI
     };
 
     let [content, setContent] = useState('');
@@ -38,16 +41,21 @@ function App(props) {
             self.clean();
             switch (router) {
                 case 'home':
-                    RPC.direct.market((list)=>{
-                        setMarket((< ListSell  list={list} buy={self.buy} />));
-                    });
+                    if(RPC.ready){
+                        RPC.common.market((list)=>{
+                            setMarket((< ListSell  list={list} buy={self.buy} />));
+                        });
+                    }else{
+                        setMarket(< Error data={'Waiting ...'}/>);
+                    }
+
                     setDom((< Search onCheck={
                         (name) => { self.check(name) }}
                     />));
                     break;
 
-                case 'docs':
-                    setMarket(''); setDom((< Docs />));
+                case 'setting':
+                    setMarket(''); setDom(((< Setting fresh={self.fresh} />)));
                     break;
 
                 case 'anchor':
@@ -58,10 +66,10 @@ function App(props) {
                         />));
                     break;
 
-                case 'setting':
+                case 'account':
                     setMarket('');
-                    setDom((< Setting keys={keys}
-                        onCheck={(name) => { self.check(name) }} balance={RPC.direct.balance} setEntry={self.setEntry}
+                    setDom((< Account keys={keys}
+                        onCheck={(name) => { self.check(name) }} balance={RPC.common.balance}
                     />));
                     break;
 
@@ -78,7 +86,7 @@ function App(props) {
                 setContent((< Sign accountKey={k}
                     callback={
                         (pair, name, ext) => {
-                            RPC.direct.write(pair, name, ext, (res) => {
+                            RPC.common.write(pair, name, ext, (res) => {
                                 //会返回3次结果，最后一次的isFinalized为true才是写入到了链里   
                                 self.handleClose();
                             });
@@ -102,7 +110,7 @@ function App(props) {
                 setContent((< Sign accountKey={k}
                     callback={
                         (pair, name, ext) => {
-                            RPC.direct.sell(pair, name, ext.sell, (res) => {
+                            RPC.common.sell(pair, name, ext.sell, (res) => {
                                 self.handleClose();
                             });
                         }
@@ -126,7 +134,7 @@ function App(props) {
                 if (menu.cost !== cost) return false;
 
                 //2.检查用户的balance;
-                RPC.direct.balance(address, (res) => {
+                RPC.common.balance(address, (res) => {
 
                     //这边比较完了，再执行buy的部分
                     console.log(res.data.free);
@@ -149,7 +157,7 @@ function App(props) {
                     (< Sign accountKey={k}
                         callback={
                             (pair, name) => {
-                                RPC.direct.buy(pair, name, (res) => {
+                                RPC.common.buy(pair, name, (res) => {
                                     self.handleClose();
                                 });
                             }
@@ -183,13 +191,13 @@ function App(props) {
         check: (anchor) => {
             if (!anchor) {
                 setResult('');
-                RPC.direct.market((list)=>{
+                RPC.common.market((list)=>{
                     setMarket((< ListSell  list={list} buy={self.buy} />));
                 });
                 return false;
             }
 
-            setMarket(''); RPC.direct.search(anchor, self.optResult);
+            setMarket(''); RPC.common.search(anchor, self.optResult);
         },
         optResult: (dt) => {
             if (dt.owner === 0) {
@@ -202,7 +210,7 @@ function App(props) {
                 const owner = dt.owner;
                 const block = dt.blocknumber;
 
-                RPC.direct.view(block, name, owner, (res) => {
+                RPC.common.view(block, name, owner, (res) => {
                     if (!res || !res.raw.protocol) {
                         setResult(< Error data='No data to show.' />);
                     } else {
@@ -217,14 +225,14 @@ function App(props) {
             }
         },
         isSelling: (anchor, ck) => {
-            RPC.direct.search(anchor, (dt) => {
+            RPC.common.search(anchor, (dt) => {
                 ck && ck(dt);
             });
         },
         isOwner: (anchor, ck) => {
             const address = self.getAddress();
             if (!address) return ck && ck(false);
-            RPC.direct.search(anchor, (dt) => {
+            RPC.common.search(anchor, (dt) => {
                 ck && ck(dt.owner === address ? dt : false);
             });
         },
@@ -237,22 +245,62 @@ function App(props) {
             setResult('');
             setOnsell('');
         },
-        setEntry:(way,index)=>{
-            entry.way=way;
-            entry.index=parseInt(index);
-            return true;
-        },
         getStart:()=>{
-            const uri=localStorage.getItem(keys.startNode);
-            if(uri!==null) return uri;
-            self.setStart(defaultStart);
-            return defaultStart;
+            const data=localStorage.getItem(keys.startNode);
+            if(data!==null){
+                start=data;
+                return JSON.parse(data);
+            } 
+            localStorage.setItem(keys.startNode,JSON.stringify(start));
+            return start;
         },
-        setStart:(uri)=>{
-            localStorage.setItem(keys.startNode,uri);
+        setStart:(key,val)=>{
+            let isValid=false;
+            for(var k in start){
+                if(k===key){
+                    start[k]=val;
+                    isValid=true;
+                } 
+            }
+            if(!isValid) return false;
+            localStorage.setItem(keys.startNode,JSON.stringify(start));
+        },
+        forceStart:()=>{
+            localStorage.setItem(keys.startNode,JSON.stringify(start));
         },
         handleClose: () => {setShow(false);},
         handleShow: () => {setShow(true);},
+        fresh:(obj)=>{
+            //console.log(obj);
+            let isChanged=false;
+            for(var k in obj){
+                if(start[k] && start[k]!==obj[k]){
+                    isChanged=true;
+                    start[k]=obj[k];
+                } 
+            }
+
+            if(isChanged) self.forceStart();
+
+            self.initPage(start);
+            self.handleClose();     //关闭弹窗
+            cur = 'home';
+            self.render(cur);
+        },
+        initPage:(entry,ck)=>{
+            RPC.init(entry,()=>{
+                RPC.common.history('hello',(res)=>{
+                    console.log(res);
+                });
+                
+                
+                RPC.common.market((list)=>{
+                    setMarket((< ListSell  list={list} buy={self.buy} />));
+                });
+
+                ck && ck();
+            });
+        },
     }
 
     let [dom, setDom] = useState((< Search onCheck={self.check}/>));
@@ -273,25 +321,9 @@ function App(props) {
     };
     
     useEffect(() => {
-        const uri=self.getStart();
-        RPC.setStart(uri);
-        RPC.init((dt)=>{
-            //console.log('Information from test_rpc in file app.js');
-            //console.log('Entry:'+JSON.stringify(dt));
-            RPC.direct.history('hello',(res)=>{
-                console.log(res);
-            });
-
-            if(RPC.select.gateway){
-                RPC.gateway.init.endpoint(RPC.select.gateway[0]);
-                RPC.gateway.init.account(self.getAddress());
-                test.gateway();
-            }
-            
-            RPC.direct.market((list)=>{
-                setMarket((< ListSell  list={list} buy={self.buy} />));
-            });
-        });
+        //console.log('APP loaded');
+        const entry=self.getStart();
+        self.initPage(entry);
     }, []);
 
     return (<div>
@@ -313,13 +345,6 @@ function App(props) {
                                 self.router();
                             }
                         } > Anchors </ Nav.Link>
-                    <Nav.Link href="#docs"
-                        onClick={
-                            () => {
-                                cur = 'docs';
-                                self.router();
-                            }
-                        } > Docs </Nav.Link>
                     <Nav.Link href="#setting"
                         onClick={
                             () => {
@@ -327,6 +352,13 @@ function App(props) {
                                 self.router();
                             }
                         } > Setting </Nav.Link>
+                    <Nav.Link href="#account"
+                        onClick={
+                            () => {
+                                cur = 'account';
+                                self.router();
+                            }
+                        } > My </Nav.Link>
                 </Nav> </Navbar.Collapse> </Container> </Navbar>
         <Row>
         <Col lg={12} xs={12} className="pt-2"> {dom} </Col>

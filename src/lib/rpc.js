@@ -4,12 +4,13 @@ import Gateway from './gateway';
 
 const config={
 	endpoint:'',
-	entry:'anchor',
+	entry:'',
 };
 
 let wsAPI=null;
 const self={
 	link:(ck) => {
+		//console.log(JSON.stringify(config));
 		if (wsAPI === null) {
 			const wsPvd = new WsProvider(config.endpoint);
 			ApiPromise.create({ provider: wsPvd }).then((api) => {
@@ -58,32 +59,40 @@ const self={
         });
         return arr;
 	},
-	setEndpoint:(uri)=>{
-		config.endpoint=uri;	//初始化传入的RPC地址
-	},
-	getEndpoint:()=>{
-		return config.endpoint;
+	group:(start)=>{
+		//1.设置基础数据
+		config.endpoint=start.node;
+		config.entry=start.anchor;
+		RPC.start=start;
+
+		//2.整理基础方法
+		RPC.common=Direct.common;
+		RPC.extra={};
+		if(start.gateway){
+			Gateway.set.endpoint(start.server);
+			Gateway.set.account(start.account);
+			RPC.extra=Gateway.extra;
+		}
 	},
 };
 
 const RPC={
-	init:function(ck){
-		if(!config.endpoint) return ck && ck({error:"no endpoint to link"});
-		self.search(config.entry,function(res){
-			//console.log(res);
-			if(res.data && res.data.raw)RPC.select=res.data.raw;
-			//1.处理好direct的部分；
+	common:{},
+	extra:{},
+	server:{},
+	start:null,
+	ready:false,
+	init:(start,ck)=>{
+		self.group(start);
+		console.log(console.log('ready to link to '+JSON.stringify(config)));
+		Direct.set.destory();
+		self.search(config.entry,(res)=>{
+			if(res.data && res.data.raw) RPC.server=res.data.raw;
 			Direct.set.websocket(wsAPI);
-			RPC.link=wsAPI;
-			ck && ck(res);
+			RPC.ready=true;
+			ck && ck();
 		});
 	},
-	setStart:self.setEndpoint,
-	getStart:self.getEndpoint,
-	select:{},		//当前的选择结构
-	link:null,
-	direct:Direct,
-	gateway:Gateway,
 };
 
 export default RPC;

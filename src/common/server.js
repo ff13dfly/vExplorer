@@ -10,14 +10,13 @@ import RPC from '../lib/rpc.js';
 let list=null;
 let selected_node='';      //保存当前选择的node
 let selected_gateway='';   //保存当前选择的gateway
-let start='';     //保存切换之前的入口node
-let enable=false; //保存enalbe gateway的状态
+let enable=false;         //保存enalbe gateway的状态
 
 function Server(props) {
 
   let [node, setNode] = useState('');
   let [gateway, setGateway] = useState('');
-
+  let [info, setInfo] = useState('');
   
   const self={
     changeNode:(res)=>{
@@ -30,7 +29,12 @@ function Server(props) {
       setGateway((<ListGateway change = {self.changeGateway} list={list.gateway} start={selected_gateway}/>));
     },
     fresh:()=>{
-      console.log('ready to link to new node');
+      const obj={
+        node:selected_node,
+        gateway:enable,
+        server:selected_gateway,
+      }
+      props.fresh(obj);
     },
     switcher:(res)=>{
       enable=res.target.checked;
@@ -43,22 +47,30 @@ function Server(props) {
   };
 
   useEffect(() => {
-    RPC.init((dt)=>{
-      list=dt.data.raw;
-      start=RPC.getStart();
-      //console.log(start);
-      setNode((<ListNode change = {self.changeNode} list={list.node} start={start}/>));      
-    });
+      //console.log(RPC);
+      if(RPC.ready){
+        list=RPC.server;
+        if(list.node){
+          setNode((<ListNode change = {self.changeNode} list={list.node} start={RPC.start.node}/>));
+        }
+          
+        if(RPC.start.gateway && list.gateway){
+          enable=true;
+          setGateway((<ListGateway change = {self.changeGateway} list={list.gateway} start={RPC.start.server}/>));
+        }
+      }else{
+        setInfo('No server linked yet...');
+      }
   }, []);
 
   return (
       <Row  className = "pt-2">
+        <Col lg = { 12 } xs = { 12 }>{info}</Col>
         <Col lg = { 12 } xs = { 12 } className = "pt-2" >
           <label>Select direct link node</label>
           {node}
         </Col>
-        <Col lg = { 12 } xs = { 12 } className = "pt-4" ></Col>
-        <Col lg = { 12 } xs = { 12 } className = "pt-4" >
+        <Col lg = { 12 } xs = { 12 } className = "pt-2" >
         <Form.Check type="switch" label="Enable vGateway" size="lg" onClick = {self.switcher}/>
         </Col>
         <Col lg = { 5 } xs = { 12 } className = "pt-2" >

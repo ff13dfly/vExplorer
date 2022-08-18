@@ -2,7 +2,6 @@ import { Container, Row, Col, Button, Form } from 'react-bootstrap';
 import { useState } from 'react';
 
 function Search(props) {
-
 	const self={
 		onSave:()=>{
 			props.onCheck(anchor);

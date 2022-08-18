@@ -8,7 +8,11 @@ const self = {
 	setWebsocket: (ws) => {
 		wsAPI=ws;
 	},
+	destoryWebsocket:()=>{
+		wsAPI=null;
+	},
 	search: (anchor, ck) => {
+		if(wsAPI===null) return ck && ck(false);
 		let unsub=null;
 		let unlist=null;
 		wsAPI.query.anchor.anchorOwner(anchor, (res) => {
@@ -36,6 +40,7 @@ const self = {
 		});
 	},
 	view:(block, anchor, owner, ck) => {
+		if(wsAPI===null) return ck && ck(false);
 		wsAPI.rpc.chain.getBlockHash(block, (res) => {
 			const hash = res.toHex();
 			if (!hash) return ck && ck(false);
@@ -161,36 +166,43 @@ const self = {
         }
     },
 	write:(pair,anchor,raw,protocol,ck)=>{
+		if(wsAPI===null) return ck && ck(false);
 		wsAPI.tx.anchor.setAnchor(anchor, raw, protocol).signAndSend(pair,(res) => {
 			ck && ck(res);
 		});
 	},
 	market:(ck)=>{
+		if(wsAPI===null) return ck && ck(false);
 		wsAPI.query.anchor.sellList.entries().then((arr) => {
 			ck && ck(arr);
 		});
 	},
 	sell:(pair,anchor,cost,ck)=>{
+		if(wsAPI===null) return ck && ck(false);
 		wsAPI.tx.anchor.sellAnchor(anchor, cost).signAndSend(pair, (res) => {
 			ck && ck(res);
 		});
 	},
 	buy:(pair,anchor,ck)=>{
+		if(wsAPI===null) return ck && ck(false);
 		wsAPI.tx.anchor.buyAnchor(anchor).signAndSend(pair, (result) => {
 			ck && ck(result);
 		});
 	},
 	owner:(anchor,ck)=>{
+		if(wsAPI===null) return ck && ck(false);
 		wsAPI.query.anchor.anchorOwner.entries().then((arr) => {
 			ck && ck(arr);
 		});
 	},
 	balance: (account, ck) => {
+		if(wsAPI===null) return ck && ck(false);
 		wsAPI.query.system.account(account,(res) => {
 			ck && ck(res);
 		})
 	},
 	listening: (ck) => {
+		if(wsAPI===null) return ck && ck(false);
 		wsAPI.rpc.chain.subscribeFinalizedHeads((lastHeader) => {
 			const lastHash = lastHeader.hash.toHex();
 			wsAPI.rpc.chain.getBlock(lastHash).then((dt) => {
@@ -227,15 +239,18 @@ const Direct={
 	set:{
         account:self.setAccount,
         websocket:self.setWebsocket,
+		destory:self.destoryWebsocket,
     },
-	balance:self.balance,
-	search:self.search,
-	view:self.view,
-	history:self.history,
-	write:self.write,
-	sell:self.sell,
-	buy:self.buy,
-	market:self.market,
+	common:{
+		balance:self.balance,
+		search:self.search,
+		view:self.view,
+		history:self.history,
+		write:self.write,
+		sell:self.sell,
+		buy:self.buy,
+		market:self.market,
+	},
 }
 
 export default Direct;

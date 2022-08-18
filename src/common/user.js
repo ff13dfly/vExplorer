@@ -1,11 +1,12 @@
 
 import { Row, Col,Button } from 'react-bootstrap';
 
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 
 //import { formatBalance } from '@polkadot/util';
 
 function User(props) {
+  let [amount,setAmount]=useState(0);
 
   const self={
     init:()=>{
@@ -26,13 +27,17 @@ function User(props) {
   const cls = {
     "wordWrap": "break-word",
   }
-  
-  props.balance(account.address,(res)=>{
-    setAmount(res.data.free.toHuman());
+
+  useEffect(() => {
+    props.balance(account.address,(res)=>{
+      if(res===false){
+        setAmount('unknown');
+      }else{
+        setAmount(res.data.free.toHuman());
+      }
+    });
   });
-
-  let [amount,setAmount]=useState(0);
-
+  
   return (
     <Row className = "pt-2" >
       <Col lg = { 5 } xs = { 5 } className = "pt-2" >
