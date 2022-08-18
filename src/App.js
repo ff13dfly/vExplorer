@@ -197,7 +197,8 @@ function App(props) {
                 return false;
             }
 
-            setMarket(''); RPC.common.search(anchor, self.optResult);
+            setMarket(''); 
+            RPC.common.search(anchor, self.optResult);
         },
         optResult: (dt) => {
             if (dt.owner === 0) {
@@ -282,13 +283,16 @@ function App(props) {
 
             if(isChanged) self.forceStart();
 
-            self.initPage(start);
+            self.initPage(start,(res)=>{
+                if(res===false) setMarket(< Error data={'Failed to create websocket link.'}/>);
+            });
             self.handleClose();     //关闭弹窗
             cur = 'home';
             self.render(cur);
         },
         initPage:(entry,ck)=>{
-            RPC.init(entry,()=>{
+            RPC.init(entry,(success)=>{
+                if(success===false) return ck && ck(false);
                 RPC.common.history('hello',(res)=>{
                     console.log(res);
                 });
@@ -298,7 +302,7 @@ function App(props) {
                     setMarket((< ListSell  list={list} buy={self.buy} />));
                 });
 
-                ck && ck();
+                ck && ck(true);
             });
         },
     }
@@ -323,7 +327,9 @@ function App(props) {
     useEffect(() => {
         //console.log('APP loaded');
         const entry=self.getStart();
-        self.initPage(entry);
+        self.initPage(entry,(res)=>{
+            if(res===false) setMarket(< Error data={'Failed to create websocket link.'}/>);
+        });
     }, []);
 
     return (<div>

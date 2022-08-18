@@ -10,19 +10,24 @@ const config={
 let wsAPI=null;
 const self={
 	link:(ck) => {
-		//console.log(JSON.stringify(config));
+		//console.log(JSON.stringify(config))
 		if (wsAPI === null) {
-			const wsPvd = new WsProvider(config.endpoint);
-			ApiPromise.create({ provider: wsPvd }).then((api) => {
-				wsAPI = api;
-				ck && ck();
-			});
+			try {
+				const wsPvd = new WsProvider(config.endpoint);
+				ApiPromise.create({ provider: wsPvd }).then((api) => {
+					wsAPI = api;
+					ck && ck(true);
+				});
+			} catch (error) {
+				ck && ck(false);
+			}
 		} else {
-			ck && ck();
+			ck && ck(true);
 		}
 	},
 	search: (anchor, ck) => {
-		self.link(() => {
+		self.link((success) => {
+			if(!success) return ck && ck(false);
 			wsAPI.query.anchor.anchorOwner(anchor, (res) => {
 				if (res.isEmpty) return ck && ck(false);
 				const owner =res.value[0].toHuman();
@@ -87,10 +92,11 @@ const RPC={
 		console.log(console.log('ready to link to '+JSON.stringify(config)));
 		Direct.set.destory();
 		self.search(config.entry,(res)=>{
+			if(res===false) return ck && ck(false);
 			if(res.data && res.data.raw) RPC.server=res.data.raw;
 			Direct.set.websocket(wsAPI);
 			RPC.ready=true;
-			ck && ck();
+			ck && ck(true);
 		});
 	},
 };
