@@ -6,8 +6,9 @@ import { Keyring } from '@polkadot/api';
 import { useState,useEffect } from 'react';
 
 function Sign(props) {
-	//console.log('Sign dialog');
-	//console.log(props);
+	let [password,setPassword]   =useState('');
+	let [extend,setExtend]   =useState('');
+	let [info,setInfo]=useState('');
 	
 	const k=props.accountKey;
 	const dt=localStorage.getItem(k);
@@ -36,7 +37,7 @@ function Sign(props) {
     		//console.log('call sign.vertify');
     		const pair=self.checkPassword();
     		if(pair===false){
-				
+				setInfo('Error password.');
     		}else{
     			props.callback(pair,props.anchor,props.extend);
     		}
@@ -46,8 +47,7 @@ function Sign(props) {
     	},
 	}
 
-	let [password,setPassword]   =useState('');
-	let [extend,setExtend]   =useState('');
+
 
 	const cls = {
 		"wordWrap": "break-word",
@@ -84,8 +84,10 @@ function Sign(props) {
 				<Col lg = { 12 } xs = { 12 } className="pt-2">
 					<Form.Control size = "lg" type = "password" placeholder = "Account password..." onChange = {(ev)=>{self.changePassword(ev)}}/>
 				</Col>
-				
-				<Col lg = { 12 } xs = { 12 } className = "pt-2 text-end" >
+				<Col lg = { 7 } xs = { 7 } className = "pt-2" >
+					{info}
+				</Col>
+				<Col lg = { 5 } xs = { 5 } className = "pt-2 text-end" >
 					<Button size = "lg" variant="primary" onClick={()=>{self.vertify()}}>Sign</Button>
 				</Col>
 			</Row>

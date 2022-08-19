@@ -1,11 +1,19 @@
 
 import { Row, Col,Button,Container } from 'react-bootstrap';
 
-//import { useState } from 'react';
+import RPC from '../lib/rpc.js';
 
 function Buy(props) {
+  //console.log(RPC);
+  RPC.common.balance(RPC.start.account,(res)=>{
+    const amount=res.data.toString();
+    console.log(amount);
+    
+  });
+
   const self={
     buyAnchor:()=>{
+      
       props.buy(props.anchor);
     },
   };
@@ -20,7 +28,7 @@ function Buy(props) {
         </Row>
       </Col>
       <Col lg = { 5 } xs = { 5 } className="text-end  pt-4">
-        <Button className="nextButton" onClick = { ()=>{self.buyAnchor()} } >Buy</Button>
+        <Button className="nextButton" onClick = {()=>{self.buyAnchor()} } >Buy</Button>
       </Col>
     </Row>
     </Container>

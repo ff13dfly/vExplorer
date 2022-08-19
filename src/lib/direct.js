@@ -185,9 +185,13 @@ const self = {
 	},
 	buy:(pair,anchor,ck)=>{
 		if(wsAPI===null) return ck && ck(false);
-		wsAPI.tx.anchor.buyAnchor(anchor).signAndSend(pair, (result) => {
-			ck && ck(result);
-		});
+		try {
+			wsAPI.tx.anchor.buyAnchor(anchor).signAndSend(pair, (result) => {
+				ck && ck(result);
+			});
+		} catch (error) {
+			ck && ck(error);
+		}
 	},
 	owner:(anchor,ck)=>{
 		if(wsAPI===null) return ck && ck(false);

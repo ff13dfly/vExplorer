@@ -14,6 +14,7 @@ import ListSell from './common/listSell';
 import Error from './common/error';
 
 import RPC from './lib/rpc.js';
+import { StringKeyframeTrack } from 'three';
 
 function App(props) {
     const keys = {
@@ -75,7 +76,8 @@ function App(props) {
                     break;
 
                 default:
-                    setMarket(''); setDom((< Search onCheck={(name) => { self.check(name) }} />));
+                    setMarket(''); 
+                    setDom((< Search onCheck={(name) => { self.check(name) }} />));
                     break;
             }
         },
@@ -166,28 +168,34 @@ function App(props) {
                         anchor={anchor}
                     />)
                 );
-                setTitle((<span className="text-warning" > {anchor}</span>)); self.handleShow();
+                setTitle((<span className="text-warning" > {anchor}</span>));
+                self.handleShow();
             }
         },
-        vertify:(anchor,raw,protocol,ck)=>{
+        doInit:(anchor,ck)=>{
             const k = keys.jsonFile;
-            setContent(
-                (< Sign accountKey={k}
-                    callback={
-                        (pair, name , ext) => {
-                            console.log(ext);
-                            const data={raw:raw,protocol:protocol}
-                            RPC.direct(pair,anchor,data,(res)=>{
-                                setShow(false);
-                                ck && ck(res);
-                            })
+            if (localStorage.getItem(k) == null) {
+                return ck && ck(false);
+            } else {
+                setContent(
+                    (< Sign accountKey={k}
+                        callback={
+                            (pair, name) => {
+                                const raw="This anchor is buy from vExplorer.";
+                                const protocol=JSON.stringify({type:"data"});
+                                RPC.common.write(pair, anchor,raw,protocol, (res) => {
+                                    //console.log(res);
+                                    setResult('');
+                                    self.handleClose();
+                                });
+                            }
                         }
-                    }
-                    anchor={anchor}
-                />)
-            );
-            setTitle((<span className="text-warning" > {anchor}</span>));
-            setShow(true);
+                        anchor={anchor}
+                    />)
+                );
+                setTitle((<span className="text-warning" > {anchor}</span>));
+                self.handleShow();
+            }
         },
         check: (anchor) => {
             if (!anchor) {
@@ -204,7 +212,7 @@ function App(props) {
         optResult: (dt) => {
             if (dt.owner === 0) {
                 setResult(< Buy anchor={dt.anchor}
-                    buy={self.doBuy}
+                    buy={self.doInit}
                 />);
                 setOnsell('');
             }else{
@@ -250,8 +258,8 @@ function App(props) {
         getStart:()=>{
             const data=localStorage.getItem(keys.startNode);
             if(data!==null){
-                start=data;
-                return JSON.parse(data);
+                start=JSON.parse(data);
+                return start;
             } 
             localStorage.setItem(keys.startNode,JSON.stringify(start));
             return start;
@@ -351,11 +359,16 @@ function App(props) {
     
     useEffect(() => {
         const entry=self.getStart();
+        //console.log(entry);
+        if(!entry.account){
+           entry.account=self.getAddress();
+           self.forceStart();
+        }
         
         self.initPage(entry,(res)=>{
             if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
         });
-        
+
     }, []);
 
     return (<div>
