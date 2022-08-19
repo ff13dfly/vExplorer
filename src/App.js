@@ -38,7 +38,7 @@ function App(props) {
             self.render(cur);
         },
         render: (router) => {
-            self.clean();
+            self.cleanDom();
             switch (router) {
                 case 'home':
                     if(RPC.ready){
@@ -55,7 +55,8 @@ function App(props) {
                     break;
 
                 case 'setting':
-                    setMarket(''); setDom(((< Setting fresh={self.fresh} />)));
+                    setMarket('');
+                    setDom(((< Setting fresh={self.fresh} clean={self.clean}/>)));
                     break;
 
                 case 'anchor':
@@ -242,7 +243,7 @@ function App(props) {
             const acc = str === null ? false : JSON.parse(str);
             return acc === false ? false : acc.address;
         },
-        clean: () => {
+        cleanDom: () => {
             setResult('');
             setOnsell('');
         },
@@ -269,6 +270,9 @@ function App(props) {
         forceStart:()=>{
             localStorage.setItem(keys.startNode,JSON.stringify(start));
         },
+        cleanStart:()=>{
+            localStorage.removeItem(keys.startNode);
+        },
         handleClose: () => {setShow(false);},
         handleShow: () => {setShow(true);},
         fresh:(obj)=>{
@@ -284,26 +288,47 @@ function App(props) {
             if(isChanged) self.forceStart();
 
             self.initPage(start,(res)=>{
-                if(res===false) setMarket(< Error data={'Failed to create websocket link.'}/>);
+                if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
+            });
+            self.handleClose();     //关闭弹窗
+            cur = 'home';
+            self.render(cur);
+        },
+        clean:()=>{
+            self.cleanStart();
+
+            self.initPage(start,(res)=>{
+                if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
             });
             self.handleClose();     //关闭弹窗
             cur = 'home';
             self.render(cur);
         },
         initPage:(entry,ck)=>{
-            RPC.init(entry,(success)=>{
-                if(success===false) return ck && ck(false);
-                RPC.common.history('hello',(res)=>{
-                    console.log(res);
-                });
-                
-                
-                RPC.common.market((list)=>{
-                    setMarket((< ListSell  list={list} buy={self.buy} />));
-                });
-
-                ck && ck(true);
+            //console.log('Started from App.js initPage : '+JSON.stringify(entry));
+            RPC.init(entry,(res)=>{
+                //console.log('RPC init result : '+ success);
+                if(res===false) return ck && ck(false);
+                if(res.error){
+                    setMarket(< Error data={'No entry anchor.'}/>);
+                    setTimeout(() => {
+                        self.showMarket(ck);
+                    }, 1000);
+                }else{
+                    self.showMarket(ck);
+                }
             });
+        },
+        showMarket:(ck)=>{
+            RPC.common.history('hello',(res)=>{
+                console.log('Anchor histroy:');
+                console.log(res);
+            });
+
+            RPC.common.market((list)=>{
+                setMarket((< ListSell  list={list} buy={self.buy} />));
+            });
+            ck && ck(true);
         },
     }
 
@@ -325,11 +350,12 @@ function App(props) {
     };
     
     useEffect(() => {
-        //console.log('APP loaded');
         const entry=self.getStart();
+        
         self.initPage(entry,(res)=>{
-            if(res===false) setMarket(< Error data={'Failed to create websocket link.'}/>);
+            if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
         });
+        
     }, []);
 
     return (<div>

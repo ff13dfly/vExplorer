@@ -28,6 +28,9 @@ function Server(props) {
       console.log(res.target.innerHTML);
       setGateway((<ListGateway change = {self.changeGateway} list={list.gateway} start={selected_gateway}/>));
     },
+    clean:()=>{
+      props.clean();
+    },
     fresh:()=>{
       const obj={
         node:selected_node,
@@ -47,7 +50,6 @@ function Server(props) {
   };
 
   useEffect(() => {
-      //console.log(RPC);
       if(RPC.ready){
         list=RPC.server;
         if(list.node){
@@ -76,7 +78,10 @@ function Server(props) {
         <Col lg = { 5 } xs = { 12 } className = "pt-2" >
           {gateway}
         </Col>
-        <Col lg = { 12 } xs = { 12 } className = "pt-4 text-center">
+        <Col lg = { 6 } xs = { 6 } className = "pt-4">
+          <Button size = "lg" variant = "primary" onClick = { self.clean } > Clean </Button>{' '}
+        </Col> 
+        <Col lg = { 6 } xs = { 6 } className = "pt-4 text-end">
           <Button size = "lg" variant = "warning" onClick = { self.fresh } > Fresh </Button>{' '}
         </Col> 
       </Row>

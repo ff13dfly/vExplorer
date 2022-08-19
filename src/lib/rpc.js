@@ -10,11 +10,15 @@ const config={
 let wsAPI=null;
 const self={
 	link:(ck) => {
-		//console.log(JSON.stringify(config))
+		
 		if (wsAPI === null) {
+			//console.log('ready to link...');
+			//console.log(JSON.stringify(config))
 			try {
-				const wsPvd = new WsProvider(config.endpoint);
-				ApiPromise.create({ provider: wsPvd }).then((api) => {
+				const provider = new WsProvider(config.endpoint);
+
+				ApiPromise.create({ provider: provider }).then((api) => {
+					//console.log('Linked...');
 					wsAPI = api;
 					ck && ck(true);
 				});
@@ -27,17 +31,20 @@ const self={
 	},
 	search: (anchor, ck) => {
 		self.link((success) => {
+			//console.log('Linked:'+success);
 			if(!success) return ck && ck(false);
 			wsAPI.query.anchor.anchorOwner(anchor, (res) => {
-				if (res.isEmpty) return ck && ck(false);
-				const owner =res.value[0].toHuman();
-				const block = res.value[1].words[0];
-				let result = { owner: owner, blocknumber: block, name: anchor,raw:{} };
-				wsAPI.rpc.chain.getBlockHash(block, (res) => {
+				let result = { owner: null, blocknumber: 0, name: anchor,raw:{},empty:true};
+				if (res.isEmpty) return ck && ck(result);
+
+				result.owner =res.value[0].toHuman();
+				result.block = res.value[1].words[0];
+				
+				wsAPI.rpc.chain.getBlockHash(result.block, (res) => {
 					const hash = res.toHex();
 					if (!hash) return ck && ck(false);
 					wsAPI.rpc.chain.getBlock(hash).then((dt) => {                      
-						if (dt.block.extrinsics.length === 1) return ck && ck(false);
+						if (dt.block.extrinsics.length === 1) return ck && ck(result);
 						const exs = self.filter(dt,'setAnchor');
 						let raw=null;
 						for (let i = 0; i < exs.length; i++) {
@@ -47,6 +54,7 @@ const self={
 							if(data.protocol.type === "data" && data.protocol.format === "JSON") data.raw=JSON.parse(data.raw);
 							result.data=data;
 						}
+						result.empty=false;
 						ck && ck(result);
 					});
 				});
@@ -86,16 +94,23 @@ const RPC={
 	extra:{},
 	server:{},
 	start:null,
-	ready:false,
+	ready:false,		//websocket状态
+	empty:true,			//是否有入口anchor
 	init:(start,ck)=>{
+		//console.log('RPC init before group');
 		self.group(start);
-		console.log(console.log('ready to link to '+JSON.stringify(config)));
+		//console.log('ready to link to '+JSON.stringify(config));
+
 		Direct.set.destory();
 		self.search(config.entry,(res)=>{
 			if(res===false) return ck && ck(false);
-			if(res.data && res.data.raw) RPC.server=res.data.raw;
 			Direct.set.websocket(wsAPI);
 			RPC.ready=true;
+
+			if(res.empty) return ck && ck({error:'No entry anchor.'});
+
+			RPC.empty=false;
+			if(res.data && res.data.raw) RPC.server=res.data.raw;
 			ck && ck(true);
 		});
 	},
