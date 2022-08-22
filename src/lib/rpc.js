@@ -10,10 +10,9 @@ const config={
 let wsAPI=null;
 const self={
 	link:(ck) => {
-		
 		if (wsAPI === null) {
 			//console.log('ready to link...');
-			//console.log(JSON.stringify(config))
+			//console.log(JSON.stringify(config));
 			try {
 				const provider = new WsProvider(config.endpoint);
 
@@ -31,7 +30,6 @@ const self={
 	},
 	search: (anchor, ck) => {
 		self.link((success) => {
-			//console.log('Linked:'+success);
 			if(!success) return ck && ck(false);
 			wsAPI.query.anchor.anchorOwner(anchor, (res) => {
 				let result = { owner: null, blocknumber: 0, name: anchor,raw:{},empty:true};
@@ -87,6 +85,9 @@ const self={
 			RPC.extra=Gateway.extra;
 		}
 	},
+	destory:()=>{
+		wsAPI=null;
+	},
 };
 
 const RPC={
@@ -97,11 +98,13 @@ const RPC={
 	ready:false,		//websocket状态
 	empty:true,			//是否有入口anchor
 	init:(start,ck)=>{
-		//console.log('RPC init before group');
+		//console.log('RPC init before group by '+JSON.stringify(start));
 		self.group(start);
 		//console.log('ready to link to '+JSON.stringify(config));
+		RPC.ready=false;
+		RPC.empty=true;
 
-		Direct.set.destory();
+		self.destory();
 		self.search(config.entry,(res)=>{
 			if(res===false) return ck && ck(false);
 			Direct.set.websocket(wsAPI);

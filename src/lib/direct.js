@@ -8,9 +8,6 @@ const self = {
 	setWebsocket: (ws) => {
 		wsAPI=ws;
 	},
-	destoryWebsocket:()=>{
-		wsAPI=null;
-	},
 	search: (anchor, ck) => {
 		if(wsAPI===null) return ck && ck(false);
 		let unsub=null;
@@ -243,7 +240,6 @@ const Direct={
 	set:{
         account:self.setAccount,
         websocket:self.setWebsocket,
-		destory:self.destoryWebsocket,
     },
 	common:{
 		balance:self.balance,

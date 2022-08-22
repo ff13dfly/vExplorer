@@ -14,23 +14,24 @@ import ListSell from './common/listSell';
 import Error from './common/error';
 
 import RPC from './lib/rpc.js';
-import { StringKeyframeTrack } from 'three';
+
+
+let start={
+    account:'',                     //使用的连接账号
+    node:'ws://localhost:9944',     //连接的入口node
+    anchor:'anchor',                //entry anchor
+    gateway:false,                  //使用启用gateway
+    server:'',                      //gateway的URI
+};
+
+const keys = {
+    jsonFile: 'js_file_name',
+    anchorList: 'anchor_list',
+    startNode:'start_node',
+}
+let cur = 'home';
 
 function App(props) {
-    const keys = {
-        jsonFile: 'js_file_name',
-        anchorList: 'anchor_list',
-        startNode:'start_node',
-    }
-    let cur = 'home';   
-    let start={
-        account:'',                     //使用的连接账号
-        node:'ws://localhost:9944',     //连接的入口node
-        anchor:'anchor',                //entry anchor
-        gateway:false,                  //使用启用gateway
-        server:'',                      //gateway的URI
-    };
-
     let [content, setContent] = useState('');
     let [show, setShow] = useState(false);
   
@@ -281,30 +282,42 @@ function App(props) {
         cleanStart:()=>{
             localStorage.removeItem(keys.startNode);
         },
+        initStart:()=>{
+            start={
+                account:'',                     //使用的连接账号
+                node:'ws://localhost:9944',     //连接的入口node
+                anchor:'anchor',                //entry anchor
+                gateway:false,                  //使用启用gateway
+                server:'',                      //gateway的URI
+            };
+            self.forceStart();
+        },
         handleClose: () => {setShow(false);},
         handleShow: () => {setShow(true);},
         fresh:(obj)=>{
-            //console.log(obj);
+            //1.combine start data
             let isChanged=false;
             for(var k in obj){
-                if(start[k] && start[k]!==obj[k]){
+                if(start[k]!==obj[k]){
                     isChanged=true;
                     start[k]=obj[k];
                 } 
             }
-
             if(isChanged) self.forceStart();
 
+            //2.rest the RPC link
             self.initPage(start,(res)=>{
                 if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
             });
             self.handleClose();     //关闭弹窗
+
+            //3.fresh page
             cur = 'home';
             self.render(cur);
         },
         clean:()=>{
             self.cleanStart();
-
+            self.initStart();
             self.initPage(start,(res)=>{
                 if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
             });
@@ -325,6 +338,7 @@ function App(props) {
                 }else{
                     self.showMarket(ck);
                 }
+                console.log(RPC);
             });
         },
         showMarket:(ck)=>{
@@ -358,18 +372,16 @@ function App(props) {
     };
     
     useEffect(() => {
-        const entry=self.getStart();
-        //console.log(entry);
-        if(!entry.account){
-           entry.account=self.getAddress();
+        start=self.getStart();
+        if(!start.account){
+           start.account=self.getAddress();
            self.forceStart();
         }
-        
-        self.initPage(entry,(res)=>{
+        self.initPage(start,(res)=>{
             if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
         });
 
-    }, []);
+    },[]);
 
     return (<div>
         <Navbar bg="light" expand="lg">

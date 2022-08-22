@@ -25,13 +25,15 @@ function Server(props) {
     },
     changeGateway:(res)=>{
       selected_gateway=res.target.innerHTML;
-      console.log(res.target.innerHTML);
       setGateway((<ListGateway change = {self.changeGateway} list={list.gateway} start={selected_gateway}/>));
     },
     clean:()=>{
       props.clean();
     },
     fresh:()=>{
+      if(enable===false) selected_gateway='';
+      if(selected_gateway==='') enable=false;
+      
       const obj={
         node:selected_node,
         gateway:enable,
@@ -45,6 +47,7 @@ function Server(props) {
         setGateway((<ListGateway change = {self.changeGateway} list={list.gateway} start={selected_gateway}/>));
       }else{
         setGateway('');
+        selected_gateway='';
       }
     },
   };
@@ -53,11 +56,14 @@ function Server(props) {
       if(RPC.ready){
         list=RPC.server;
         if(list.node){
+          //setNode(RPC.start.node);
+          selected_node=RPC.start.node;
           setNode((<ListNode change = {self.changeNode} list={list.node} start={RPC.start.node}/>));
         }
-          
+
         if(RPC.start.gateway && list.gateway){
           enable=true;
+          selected_gateway=RPC.start.server;
           setGateway((<ListGateway change = {self.changeGateway} list={list.gateway} start={RPC.start.server}/>));
         }
       }else{
@@ -73,7 +79,7 @@ function Server(props) {
           {node}
         </Col>
         <Col lg = { 12 } xs = { 12 } className = "pt-2" >
-        <Form.Check type="switch" label="Enable vGateway" size="lg" onClick = {self.switcher}/>
+        <Form.Check type="switch" label="Enable vGateway" size="lg" defaultChecked={RPC.start.gateway} onClick = {self.switcher}/>
         </Col>
         <Col lg = { 5 } xs = { 12 } className = "pt-2" >
           {gateway}
