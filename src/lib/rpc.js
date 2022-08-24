@@ -70,7 +70,7 @@ const self={
         });
         return arr;
 	},
-	group:(start)=>{
+	group:(start,ck)=>{
 		//1.设置基础数据
 		config.endpoint=start.node;
 		config.entry=start.anchor;
@@ -83,6 +83,9 @@ const self={
 			Gateway.set.endpoint(start.server);
 			Gateway.set.account(start.account);
 			RPC.extra=Gateway.extra;
+			Gateway.set.init(ck);
+		}else{
+			ck && ck();
 		}
 	},
 	destory:()=>{
@@ -99,22 +102,21 @@ const RPC={
 	empty:true,			//是否有入口anchor
 	init:(start,ck)=>{
 		//console.log('RPC init before group by '+JSON.stringify(start));
-		self.group(start);
-		//console.log('ready to link to '+JSON.stringify(config));
-		RPC.ready=false;
-		RPC.empty=true;
-
-		self.destory();
-		self.search(config.entry,(res)=>{
-			if(res===false) return ck && ck(false);
-			Direct.set.websocket(wsAPI);
-			RPC.ready=true;
-
-			if(res.empty) return ck && ck({error:'No entry anchor.'});
-
-			RPC.empty=false;
-			if(res.data && res.data.raw) RPC.server=res.data.raw;
-			ck && ck(true);
+		self.group(start,()=>{
+			RPC.ready=false;
+			RPC.empty=true;
+			self.destory();
+			self.search(config.entry,(res)=>{
+				if(res===false) return ck && ck(false);
+				Direct.set.websocket(wsAPI);
+				RPC.ready=true;
+	
+				if(res.empty) return ck && ck({error:'No entry anchor.'});
+	
+				RPC.empty=false;
+				if(res.data && res.data.raw) RPC.server=res.data.raw;
+				ck && ck(true);
+			});
 		});
 	},
 };

@@ -338,13 +338,13 @@ function App(props) {
                 }else{
                     self.showMarket(ck);
                 }
-                console.log(RPC);
+                //console.log(RPC);
             });
         },
         showMarket:(ck)=>{
             RPC.common.history('hello',(res)=>{
                 console.log('Anchor histroy:');
-                console.log(res);
+                //console.log(res);
             });
 
             RPC.common.market((list)=>{
