@@ -208,6 +208,7 @@ function App(props) {
             }
 
             setMarket(''); 
+            console.log(RPC);
             RPC.common.search(anchor, self.optResult);
         },
         optResult: (dt) => {

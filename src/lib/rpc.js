@@ -70,6 +70,13 @@ const self={
         });
         return arr;
 	},
+	copy:(obj)=>{
+		const res={};
+		for(var k in obj){
+			res[k]=obj[k];
+		}
+		return res;
+	},
 	group:(start,ck)=>{
 		//1.设置基础数据
 		config.endpoint=start.node;
@@ -77,14 +84,28 @@ const self={
 		RPC.start=start;
 
 		//2.整理基础方法
-		RPC.common=Direct.common;
+		//RPC.common={};
+		RPC.common=self.copy(Direct.common);
 		RPC.extra={};
+		//console.log(JSON.stringify(start));
 		if(start.gateway){
+			//2.1.combine basic method
 			Gateway.set.endpoint(start.server);
 			Gateway.set.account(start.account);
 			RPC.extra=Gateway.extra;
+
+			//2.2.using gateway common method;
+			for(var k in Gateway.common){
+				RPC.common[k]=Gateway.common[k];
+			}
+			
 			Gateway.set.init(ck);
 		}else{
+			//2.3.use direct method as default.
+			console.log(Direct.common);
+			for(var k in Direct.common){
+				RPC.common[k]=Direct.common[k];
+			}
 			ck && ck();
 		}
 	},

@@ -48,7 +48,6 @@ function Setting(props) {
 			const obj={
 			  node:selected_node,
 			}
-			//console.log(obj);
 			props.fresh(obj);
 		},
 	}

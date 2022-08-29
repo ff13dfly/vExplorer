@@ -51,11 +51,20 @@ const self = {
     order:(params,index,ck)=>{
         //1.从
     },
-    view:(anchor,ck)=>{
-        //1.从dServer里直接取可用的
 
-        //2.调用pass进行数据获取
+
+    view:(anchor,ck)=>{
+        console.log(anchor);
+        console.log(dServers);
+        var params={anchor:anchor};
+        var index=0;
+        self.pass(params,index,(res)=>{
+            console.log(res);
+        })
         
+    },
+    target:(block,anchor,owner)=>{
+
     },
     history:(anchor,ck)=>{
         // const json={
@@ -122,7 +131,7 @@ const self = {
                 const row=list[k];
                 for(var kk in row){
                     const p=row[kk];
-                    console.log(p);
+                    //console.log(p);
                     if(p.type==='direct'){
                         if(dServers===null || !dServers[k]) dServers[k]={active:[],funs:{}};
                         dServers[k].active.push(kk);
@@ -133,13 +142,13 @@ const self = {
 
                     if(p.type==='order'){
 
-                    }
-                    
+                    }                 
                 }
             }
-
-            console.log(dServers);
-            console.log(oServers);
+            Gateway.extra.pass=dServers;
+            Gateway.extra.order=oServers;
+            //console.log(dServers);
+            //console.log(oServers);
         });
         ck && ck();
     },
@@ -153,8 +162,8 @@ const Gateway={
         spam:self.spam,
     },
     common:{
-        search:function(anchor,ck){},
-        view:self.view,
+        search:self.view,
+        view:self.target,
         history:self.history,
     },
     extra:{
