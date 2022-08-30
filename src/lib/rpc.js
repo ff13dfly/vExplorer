@@ -128,7 +128,9 @@ const RPC={
 			RPC.empty=true;
 			self.destory();
 			self.search(config.entry,(res)=>{
-				if(res===false) return ck && ck(false);
+				if(res===false){
+					return ck && ck(false);
+				} 
 				Direct.set.websocket(wsAPI);
 				RPC.ready=true;
 	

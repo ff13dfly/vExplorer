@@ -343,13 +343,14 @@ function App(props) {
                 if(res===false) return ck && ck(false);
                 if(res.error){
                     setMarket(< Error data={'No entry anchor.'}/>);
+                    self.initStart();
+                    //return self.initPage(self.getStart(),ck);
                     setTimeout(() => {
                         self.showMarket(ck);
                     }, 1000);
                 }else{
                     self.showMarket(ck);
                 }
-                //console.log(RPC);
             });
         },
         showMarket:(ck)=>{
@@ -390,6 +391,13 @@ function App(props) {
                 console.log(res);
             });
         },
+        view:()=>{
+            console.log('Anchor view:');
+            const bk=1509;
+            RPC.common.view(bk,'hello','',(res)=>{
+                console.log(res);
+            });
+        },
     };
     
     useEffect(() => {
@@ -401,7 +409,8 @@ function App(props) {
         self.initPage(start,(res)=>{
             //console.log(RPC);
             test.history();
-            test.search();
+            //test.search();
+            test.view();
             if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
         });
     },[]);

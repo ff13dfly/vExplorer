@@ -72,11 +72,12 @@ const self = {
         });
         
     },
-    target:(block,anchor,owner,ck)=>{
+    target:(block, anchor, owner,ck)=>{
         const params={
             fun:"target",
             service:"vHistory",
             anchor:anchor,
+            block:block,
             spam:spam,
         };
         self.pass(params,(res)=>{
