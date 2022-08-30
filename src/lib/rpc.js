@@ -102,7 +102,7 @@ const self={
 			Gateway.set.init(ck);
 		}else{
 			//2.3.use direct method as default.
-			console.log(Direct.common);
+			//console.log(Direct.common);
 			for(var k in Direct.common){
 				RPC.common[k]=Direct.common[k];
 			}

@@ -35,16 +35,11 @@ const self = {
             ck && ck();
         });
     },
-    pass:(params,index,ck)=>{
+    pass:(params,ck)=>{
         const json={
             "id":"",
             "method":"call",
-            "params":{
-                "service":"vHistory",
-                "fun":"view",
-                "spam":spam,
-                //"anchor":anchor
-            }
+            "params":params,
         };
         self.request(json,ck);
     },
@@ -54,30 +49,60 @@ const self = {
 
 
     view:(anchor,ck)=>{
-        console.log(anchor);
-        console.log(dServers);
-        var params={anchor:anchor};
-        var index=0;
-        self.pass(params,index,(res)=>{
-            console.log(res);
-        })
+        const params={
+            fun:"view",
+            service:"vHistory",
+            anchor:anchor,
+            spam:spam,
+        };
+        self.pass(params,(res)=>{
+            //console.log(res);
+            if(!res || !res.data) return ck && ck(false);
+            const an={
+                anchor:anchor,
+                block:res.data.block,
+                owner:res.data.owner,
+                raw:{
+                    key:res.data.key,
+                    protocol:res.data.protocol,
+                    raw:res.data.raw,
+                }
+            }
+            ck && ck(an);
+        });
         
     },
-    target:(block,anchor,owner)=>{
-
+    target:(block,anchor,owner,ck)=>{
+        const params={
+            fun:"target",
+            service:"vHistory",
+            anchor:anchor,
+            spam:spam,
+        };
+        self.pass(params,(res)=>{
+            ck && ck(res.data);
+        });
     },
-    history:(anchor,ck)=>{
-        // const json={
-        //     "id":"",
-        //     "method":"call",
-        //     "params":{
-        //         "service":"vHistory",
-        //         "fun":"view",
-        //         "spam":spam,
-        //         "anchor":anchor
-        //     }
-        // };
-        // self.request(json,ck);
+    history:(anchor,ck,cfg)=>{
+        const params={
+            fun:"history",
+            service:"vHistory",
+            anchor:anchor,
+            spam:spam,
+        };
+        //console.log(cfg);
+        if(cfg!==undefined){
+            const ss=cfg.step===undefined?10:parseInt(cfg.step);
+            const pp=cfg.page===undefined?1:parseInt(cfg.page);
+            params.step=ss;
+            params.page=pp;
+        }else{
+            params.step=20;
+            params.page=1;
+        }    
+        self.pass(params,(res)=>{
+            ck && ck(res.data);
+        });
     }, 
     request:(json,ck)=>{
         //console.log(`Request:${JSON.stringify(json)}`);

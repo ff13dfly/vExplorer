@@ -206,9 +206,7 @@ function App(props) {
                 });
                 return false;
             }
-
-            setMarket(''); 
-            console.log(RPC);
+            setMarket('');
             RPC.common.search(anchor, self.optResult);
         },
         optResult: (dt) => {
@@ -218,22 +216,34 @@ function App(props) {
                 />);
                 setOnsell('');
             }else{
-                const name = dt.anchor;
-                const owner = dt.owner;
-                const block = dt.blocknumber;
-
-                RPC.common.view(block, name, owner, (res) => {
-                    if (!res || !res.raw.protocol) {
+                if(dt.raw){
+                    if (!dt.raw.protocol) {
                         setResult(< Error data='No data to show.' />);
                     } else {
-                        setResult(< Detail anchor={name}
-                            raw={res.raw}
-                            protocol={res.raw.protocol}
+                        setResult(< Detail anchor={dt.anchor}
+                            raw={dt.raw}
+                            protocol={dt.raw.protocol}
                             owner={dt.owner}
-                            block={block}
+                            block={dt.block}
                         />);
                     }
-                });
+                }else{
+                    const name = dt.anchor;
+                    const owner = dt.owner;
+                    const block = dt.blocknumber;
+                    RPC.common.view(block, name, owner, (res) => {
+                        if (!res || !res.raw.protocol) {
+                            setResult(< Error data='No data to show.' />);
+                        } else {
+                            setResult(< Detail anchor={name}
+                                raw={res.raw}
+                                protocol={res.raw.protocol}
+                                owner={dt.owner}
+                                block={block}
+                            />);
+                        }
+                    });
+                }
             }
         },
         isSelling: (anchor, ck) => {
@@ -343,11 +353,6 @@ function App(props) {
             });
         },
         showMarket:(ck)=>{
-            RPC.common.history('hello',(res)=>{
-                console.log('Anchor histroy:');
-                //console.log(res);
-            });
-
             RPC.common.market((list)=>{
                 setMarket((< ListSell  list={list} buy={self.buy} />));
             });
@@ -370,6 +375,21 @@ function App(props) {
                 });
             });
         },
+        history:()=>{
+            const cfg={step:20,page:1};
+
+            console.log('Anchor histroy:');
+            RPC.common.history('hello',(res)=>{
+                console.log(res);
+            },cfg);
+        },
+        search:()=>{
+            //console.log(RPC);
+            console.log('Anchor search:');
+            RPC.common.search('hello',(res)=>{
+                console.log(res);
+            });
+        },
     };
     
     useEffect(() => {
@@ -379,9 +399,11 @@ function App(props) {
            self.forceStart();
         }
         self.initPage(start,(res)=>{
+            //console.log(RPC);
+            test.history();
+            test.search();
             if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
         });
-
     },[]);
 
     return (<div>
