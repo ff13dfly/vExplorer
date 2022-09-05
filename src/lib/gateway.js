@@ -84,6 +84,19 @@ const self = {
             ck && ck(res.data);
         });
     },
+    free:(anchor,raw,ck)=>{
+        const params={
+            fun:"free",
+            service:"vFree",
+            anchor:anchor,
+            raw:raw,
+            protocol:JSON.stringify({type:"data",format:"JSON"}),
+            spam:spam,
+        };
+        self.pass(params,(res)=>{
+            ck && ck(res);
+        });
+    },
     history:(anchor,ck,cfg)=>{
         const params={
             fun:"history",
@@ -125,7 +138,6 @@ const self = {
                     spam='';
                     return self.request(json,ck);
                 }else{
-                    self.error(res);
                     ck && ck(res);
                 }
             }else{
@@ -142,7 +154,7 @@ const self = {
         console.log(uri);
         $.getJSON({type:'get',url:uri,async:false,success:function(res){
             if(!res.result || !res.result.success){
-                console.log('server failed,messsage:'+res.message);
+                console.log('server failed,messsage:'+res.error.message);
             } 
             ck && ck(res);
         }});
@@ -171,8 +183,8 @@ const self = {
                     }                 
                 }
             }
-            Gateway.extra.pass=dServers;
-            Gateway.extra.order=oServers;
+            Gateway.vservice.pass=dServers;
+            Gateway.vservice.order=oServers;
             //console.log(dServers);
             //console.log(oServers);
         });
@@ -192,11 +204,12 @@ const Gateway={
         view:self.target,
         history:self.history,
     },
-    extra:{
+    vservice:{
         pass:{},
         order:{},
-        //charge:self.charge,
-        //free:self.free,
+    },
+    extra:{
+        free:self.free,
     },
 };
 

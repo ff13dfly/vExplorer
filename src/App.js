@@ -221,7 +221,7 @@ function App(props) {
                         setResult(< Error data='No data to show.' />);
                     } else {
                         setResult(< Detail anchor={dt.anchor}
-                            raw={dt.raw}
+                            raw={dt.raw.raw}
                             protocol={dt.raw.protocol}
                             owner={dt.owner}
                             block={dt.block}
@@ -236,7 +236,7 @@ function App(props) {
                             setResult(< Error data='No data to show.' />);
                         } else {
                             setResult(< Detail anchor={name}
-                                raw={res.raw}
+                                raw={res.raw.raw}
                                 protocol={res.raw.protocol}
                                 owner={dt.owner}
                                 block={block}
@@ -398,6 +398,26 @@ function App(props) {
                 console.log(res);
             });
         },
+        free:()=>{
+            const rand=(m,n)=>{return Math.floor(Math.random() * (m-n+1) + n)};
+            const char=(n,pre)=>{
+                n=n||7;pre=pre||'';
+                for(let i=0;i<n;i++)pre+=i%2?String.fromCharCode(rand(65,90)):String.fromCharCode(rand(97,122));
+                return pre;
+            };
+
+            console.log('Anchor free:');
+            const anchor="hello";
+            const ctx={
+                title:"Break news!"+char(32),
+                content:"Today,we have 4M volume."
+            }
+            const raw=JSON.stringify(ctx);
+            if(!RPC.extra.free) return console.log('No free function on gateway');
+            RPC.extra.free(anchor,raw,(res)=>{
+                console.log(res);
+            });
+        },
     };
     
     useEffect(() => {
@@ -408,9 +428,10 @@ function App(props) {
         }
         self.initPage(start,(res)=>{
             //console.log(RPC);
-            test.history();
+            //test.history();
             //test.search();
-            test.view();
+            //test.view();
+            //test.free();
             if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
         });
     },[]);

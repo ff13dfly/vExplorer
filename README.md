@@ -8,6 +8,7 @@ Direct link and gateway are both support by vExplorer. App get entry list for an
 ```JSON
 {"node":["ws://localhost:9944","wss://network.metanchor.net"],"gateway":["http://localhost/vGateway","http://android.im/vGateway"]}
 ```
+
 ```JSON
 {"node":["ws://localhost:9944","wss://network.metanchor.net","wss://another.metanchor.net"],"gateway":["http://localhost/vGateway","http://android.im/vGateway"]}
 ```
