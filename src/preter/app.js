@@ -5,41 +5,31 @@ import tools from '../lib/tools.js';
 import RPC from '../lib/rpc.js';
 
 function AnchorApp(props) {
-    const failed={};
-    const loaded={};
-
     const self={
-        getLibs:(list,ck)=>{
-            const len=list.length;
-            const cache={};
-            for(let i=0;i<len;i++){
-                if(Array.isArray(list[i])){
-                    cache[list[i][0]]='';
-                }else{
-                    cache[list[i]]='';
-                }
-            }
-            
-            let count=0;
-            for(let i=0;i<len;i++){
-                const row=list[i];
-                if(Array.isArray(row)){
-                    self.getAnchor(row[0],row[1],(an,res)=>{
-                        if(!res) failed[row[0]]={error:'no such anchor'};
-                        cache[an]=res;
-                        count++;
-                        if(count==len) ck && ck(cache);
-                    });
-                }else{
-                    self.getAnchor(row,0,(an,res)=>{
-                        if(!res) failed[row]={error:'no such anchor'};
+        getLibs:(list,ck,cache)=>{
+            console.log(`Start:${JSON.stringify(list)}`);
+            if(!cache) cache={};
+            const row=list.shift();
+            const anchor=(Array.isArray(row)?row[0]:row).toLocaleLowerCase();
+            const block=Array.isArray(row)?row[1]:0;
 
-                        cache[an]=res;
-                        count++;
-                        if(count==len) ck && ck(cache);
-                    });
+            if(cache[anchor]) return self.getLibs(list,ck,cache);
+
+
+            //2.get target anchor
+            self.getAnchor(anchor,block,(an,res)=>{
+                cache[an]=!res?{error:'no such anchor'}:res;
+                if(res.protocol && res.protocol.ext){
+                    for(let i=res.protocol.ext.length;i>0;i--) list.unshift(res.protocol.ext[i-1]);
                 }
-            }
+
+                if(res.protocol && res.protocol.lib){
+                    for(let i=0;i<res.protocol.lib.length;i++) list.unshift(res.protocol.lib[i]);
+                }
+
+                if(list.length===0) return ck && ck(cache);
+                self.getLibs(list,ck,cache);
+            });
         },
         getAnchor:(anchor,block,ck)=>{
             //console.log(anchor);
@@ -48,7 +38,6 @@ function AnchorApp(props) {
             const viewer=RPC.common.view;
             search(anchor, (res)=>{
                 if(!res || (!res.owner)) return ck && ck(anchor,'');
-                //console.log(res);
                 viewer(block===0?res.blocknumber:block,anchor,res.owner,(rs)=>{
                     ck && ck(anchor,rs.raw);
                 });
@@ -61,6 +50,7 @@ function AnchorApp(props) {
             let txt='';
             self.getLibs(list,(dt)=>{
                 console.log(dt);
+                const failed={};
                 const len=list.length;
                 for(let i=0;i<len;i++){
                     const row=list[i];
@@ -77,7 +67,7 @@ function AnchorApp(props) {
                 } else {
                     document.getElementsByTagName('head')[0].appendChild(scp);
                 }
-                ck && ck();
+                ck && ck(failed);
             });
         },
     }
@@ -88,12 +78,11 @@ function AnchorApp(props) {
         if(!cApp) return false;
 
         if(props.protocol && props.protocol.lib){
-            self.loadLib(props.protocol.lib,()=>{
-                console.log(failed);
+            self.loadLib(props.protocol.lib,(failed)=>{
                 cApp(RPC,'#app_container',failed);
             });
         }else{
-            cApp(RPC,'#app_container',failed);
+            cApp(RPC,'#app_container',{});
         }
     });
 
