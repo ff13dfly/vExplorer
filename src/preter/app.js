@@ -3,11 +3,11 @@ import { Row,Col } from 'react-bootstrap';
 
 import tools from '../lib/tools.js';
 import RPC from '../lib/rpc.js';
-import Loader from '../lib/cloader.js';
+import Loader from '../lib/loader.js';
 
 function AnchorApp(props) {
     const self={
-        appendJS:(code)=>{
+        loadJS:(code)=>{
             const scp = document.createElement('script');
             scp.type = 'text/javascript';
             scp.crossOrigin = 'anonymous';
@@ -17,6 +17,9 @@ function AnchorApp(props) {
             } else {
                 document.getElementsByTagName('head')[0].appendChild(scp);
             }
+        },
+        loadCSS:(code)=>{
+
         },
     }
 
@@ -30,13 +33,11 @@ function AnchorApp(props) {
                 props.protocol.lib,
                 {viewer:RPC.common.view,search:RPC.common.search},
                 (code)=>{
-                    console.log(code);
-                    //cApp(RPC,'#app_container',code.failed);
+                    //console.log(code);
+                    self.loadJS(code.js);
+                    cApp(RPC,'#app_container',code.failed);
                 }
             );
-            // self.loadLib(props.protocol.lib,(failed)=>{
-            //     cApp(RPC,'#app_container',failed);
-            // });
         }else{
             cApp(RPC,'#app_container',{});
         }

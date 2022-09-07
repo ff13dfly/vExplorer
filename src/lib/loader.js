@@ -265,6 +265,7 @@ const self={
 }
 
 const Loader =(list,RPC,ck)=>{
+    console.log(`Load list : ${JSON.stringify(list)}`);
     viewer=RPC.viewer;
     search=RPC.search;
     self.getLibs(list,(dt,order)=>{                
