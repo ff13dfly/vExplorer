@@ -9,9 +9,11 @@ const self = {
 		wsAPI=ws;
 	},
 	search: (anchor, ck) => {
+		anchor=anchor.toLocaleLowerCase();
 		if(wsAPI===null) return ck && ck(false);
 		let unsub=null;
 		let unlist=null;
+		//console.log(anchor);
 		wsAPI.query.anchor.anchorOwner(anchor, (res) => {
 			if (res.isEmpty) {
 				ck && ck({ owner: 0, blocknumber: 0, anchor: anchor });
@@ -37,6 +39,7 @@ const self = {
 		});
 	},
 	view:(block, anchor, owner, ck) => {
+		anchor=anchor.toLocaleLowerCase();
 		if(wsAPI===null) return ck && ck(false);
 		wsAPI.rpc.chain.getBlockHash(block, (res) => {
 			const hash = res.toHex();
@@ -45,10 +48,11 @@ const self = {
 			wsAPI.rpc.chain.getBlock(hash).then((dt) => {                      
 				if (dt.block.extrinsics.length === 1) return ck && ck(false);
 				const exs = self.filter(dt,'setAnchor');
+				//console.log(exs);
 				let raw=null;
 				for (let i = 0; i < exs.length; i++) {
 					const data = exs[i].args;
-					if(data.key!== anchor) continue;
+					if(data.key.toLocaleLowerCase()!== anchor) continue;
 					if(data.protocol) data.protocol=JSON.parse(data.protocol);
 					if(data.protocol.type === "data" && data.protocol.format === "JSON") data.raw=JSON.parse(data.raw);
 					result.raw=data;
@@ -68,6 +72,7 @@ const self = {
         return arr;
 	},
 	history:(anchor,ck,limit)=>{
+		anchor=anchor.toLocaleLowerCase();
         let unsub=null;
         wsAPI.query.anchor.anchorOwner(anchor, (res) => {
             if (res.isEmpty) return ck && ck(false);
@@ -90,10 +95,11 @@ const self = {
             wsAPI.rpc.chain.getBlock(hash).then((dt) => {
                 if (dt.block.extrinsics.length === 1) return ck && ck(false);
                 const exs = self.filter(dt,'setAnchor');
+				
                 let raw=null;
                 for (let i = 0; i < exs.length; i++) {
                     const data = exs[i].args;
-                    if(data.key!== anchor) continue;
+                    if(data.key.toLocaleLowerCase()!== anchor)
                     if(data.protocol) data.protocol=JSON.parse(data.protocol);
 					if(data.protocol.format==='JSON') data.raw=JSON.parse(data.raw);
                     raw= data;
@@ -163,6 +169,7 @@ const self = {
         }
     },
 	write:(pair,anchor,raw,protocol,ck)=>{
+		anchor=anchor.toLocaleLowerCase();
 		if(wsAPI===null) return ck && ck(false);
 		wsAPI.tx.anchor.setAnchor(anchor, raw, protocol).signAndSend(pair,(res) => {
 			ck && ck(res);
@@ -175,12 +182,14 @@ const self = {
 		});
 	},
 	sell:(pair,anchor,cost,ck)=>{
+		anchor=anchor.toLocaleLowerCase();
 		if(wsAPI===null) return ck && ck(false);
 		wsAPI.tx.anchor.sellAnchor(anchor, cost).signAndSend(pair, (res) => {
 			ck && ck(res);
 		});
 	},
 	buy:(pair,anchor,ck)=>{
+		anchor=anchor.toLocaleLowerCase();
 		if(wsAPI===null) return ck && ck(false);
 		try {
 			wsAPI.tx.anchor.buyAnchor(anchor).signAndSend(pair, (result) => {
@@ -191,6 +200,7 @@ const self = {
 		}
 	},
 	owner:(anchor,ck)=>{
+		anchor=anchor.toLocaleLowerCase();
 		if(wsAPI===null) return ck && ck(false);
 		wsAPI.query.anchor.anchorOwner.entries().then((arr) => {
 			ck && ck(arr);

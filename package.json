@@ -11,6 +11,7 @@
         "BigInt": "^5.5.3",
         "bootstrap": "^5.1.3",
         "fetch-jsonp": "^1.2.1",
+        "iconv-lite": "^0.6.3",
         "jquery": "^3.6.0",
         "jsonp": "^0.2.1",
         "react": "^17.0.2",

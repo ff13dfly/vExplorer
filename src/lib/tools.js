@@ -31,6 +31,34 @@ const tools = {
 		}));
 		return typedArray.buffer;
 	},
-}
+	strToU8:(str)=>{
+
+		const code = encodeURIComponent(str);
+		console.log(code);
+		const bytes = [];
+		for (var i = 0; i < code.length; i++) {
+			const c = code.charAt(i);
+			if (c === '%') {
+				const hex = code.charAt(i + 1) + code.charAt(i + 2);
+				const hexVal = parseInt(hex, 16);
+				bytes.push(hexVal);
+				i += 2;
+			} else bytes.push(c.charCodeAt(0));
+		}
+		return bytes;
+		// var result = '';
+		// if(window.TextEncoder){
+		// 	var encoder = new TextEncoder('utf8');
+		// 	var bytes = encoder.encode(str);
+		// 	for(var i = 0; i < bytes.length;i++) {
+		// 		console.log(bytes[i]);
+		// 		result += String.fromCharCode(bytes[i]);
+		// 	}
+		// }else{
+		// 	result=eval('\''+encodeURI(str).replace(/%/gm, '\\x')+'\'');
+		// }
+		// return result;
+	}
+};
 
 export default tools;

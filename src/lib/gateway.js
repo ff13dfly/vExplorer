@@ -59,7 +59,7 @@ const self = {
             //console.log(res);
             if(!res || !res.data) return ck && ck(false);
             const an={
-                anchor:anchor,
+                anchor:anchor.toLocaleLowerCase(),
                 block:res.data.block,
                 owner:res.data.owner,
                 raw:{
@@ -76,7 +76,7 @@ const self = {
         const params={
             fun:"target",
             service:"vHistory",
-            anchor:anchor,
+            anchor:anchor.toLocaleLowerCase(),
             block:block,
             spam:spam,
         };
@@ -88,7 +88,7 @@ const self = {
         const params={
             fun:"free",
             service:"vFree",
-            anchor:anchor,
+            anchor:anchor.toLocaleLowerCase(),
             raw:raw,
             protocol:JSON.stringify({type:"data",format:"JSON"}),
             spam:spam,

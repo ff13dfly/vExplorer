@@ -29,6 +29,7 @@ const self={
 		}
 	},
 	search: (anchor, ck) => {
+		anchor=anchor.toLocaleLowerCase();
 		self.link((success) => {
 			if(!success) return ck && ck(false);
 			wsAPI.query.anchor.anchorOwner(anchor, (res) => {

@@ -18,7 +18,8 @@ import RPC from './lib/rpc.js';
 
 let start={
     account:'',                     //使用的连接账号
-    node:'ws://localhost:9944',     //连接的入口node
+    //node:'ws://localhost:9944',     //连接的入口node
+    node:'wss://network.metanchor.net',     //连接的入口node
     anchor:'anchor',                //entry anchor
     gateway:false,                  //使用启用gateway
     server:'',                      //gateway的URI
@@ -199,6 +200,7 @@ function App(props) {
             }
         },
         check: (anchor) => {
+            //console.log(anchor);
             if (!anchor) {
                 setResult('');
                 RPC.common.market((list)=>{
@@ -418,6 +420,17 @@ function App(props) {
                 console.log(res);
             });
         },
+        decode:()=>{
+            const iconv = require('iconv-lite');
+            let buf = iconv.encode("汉字", 'GBK');
+            let str = iconv.decode(buf, 'GBK');
+            console.log(str);
+
+            const tools=require('./lib/tools.js');
+            console.log(tools);
+            const res=tools.default.strToU8("你好");
+            console.log(res);
+        },
     };
     
     useEffect(() => {
@@ -427,6 +440,7 @@ function App(props) {
            self.forceStart();
         }
         self.initPage(start,(res)=>{
+            test.decode();
             //console.log(RPC);
             //test.history();
             //test.search();

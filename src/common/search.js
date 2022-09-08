@@ -4,9 +4,10 @@ import { useState } from 'react';
 function Search(props) {
 	const self={
 		onSave:()=>{
-			props.onCheck(anchor);
+			props.onCheck(anchor.toLocaleLowerCase());
 		},
 		onChange:(event)=>{
+			if(!event.target.value) return false;
 			setAnchor(event.target.value);
 		},
 	}
