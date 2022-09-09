@@ -73,6 +73,7 @@ const self = {
         
     },
     target:(block, anchor, owner,ck)=>{
+        //console.log(anchor);
         const params={
             fun:"target",
             service:"vHistory",

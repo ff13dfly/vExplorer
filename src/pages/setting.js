@@ -34,7 +34,7 @@ function Setting(props) {
 						<ListNode list={list} start={selected} change={self.change}/>
 					</Col>
 					<Col lg = { 12 } xs = { 12 }>
-						<NodeInput />
+						<NodeInput save={self.save}/>
 					</Col>
 					<Col lg = { 6 } xs = { 6 } className = "navbar-fixed-bottom pt-4">
 						<Button size = "lg" variant = "primary" onClick = { self.clean } > Clean </Button>{' '}
@@ -44,6 +44,9 @@ function Setting(props) {
 					</Col>
 				</Row>
 			)
+		},
+		save:(uri)=>{
+			props.save(uri);
 		},
 		clean:()=>{
 			props.clean();

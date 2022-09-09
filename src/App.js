@@ -59,7 +59,7 @@ function App(props) {
 
                 case 'setting':
                     setMarket('');
-                    setDom(((< Setting fresh={self.fresh} clean={self.clean}/>)));
+                    setDom(((< Setting fresh={self.fresh} clean={self.clean} save={self.save}/>)));
                     break;
 
                 case 'anchor':
@@ -212,6 +212,7 @@ function App(props) {
             RPC.common.search(anchor, self.optResult);
         },
         optResult: (dt) => {
+            if(dt===false) return setResult(< Error data='No data to show.' />);
             if (dt.owner === 0) {
                 setResult(< Buy anchor={dt.anchor}
                     buy={self.doInit}
@@ -307,6 +308,19 @@ function App(props) {
         },
         handleClose: () => {setShow(false);},
         handleShow: () => {setShow(true);},
+        save:(uri)=>{
+            start.node=uri;
+
+            //2.rest the RPC link
+            self.initPage(start,(res)=>{
+                if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
+            });
+            self.handleClose();     //关闭弹窗
+
+            //3.fresh page
+            cur = 'home';
+            self.render(cur);
+        },
         fresh:(obj)=>{
             //1.combine start data
             let isChanged=false;

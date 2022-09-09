@@ -47,7 +47,7 @@ decode process
 //Result: 'E8999AE68B9FE4B896E7958C'
 //Add the "%" per 2 char : '%E8%99%9A%E6%8B%9F%E4%B8%96%E7%95%8C'
 
-'E8999AE68B9FE4B896E7958C'.toLocaleLowerCase();
+decodeURIComponent('%E8%99%9A%E6%8B%9F%E4%B8%96%E7%95%8C');
 //Result: 'e8999ae68b9fe4b896e7958c'
 ```
 

@@ -1,22 +1,27 @@
 
-import { useEffect } from 'react';
-import { Row, Col, Form } from 'react-bootstrap';
+import { useState} from 'react';
+import { Row, Col, Form,Button } from 'react-bootstrap';
 
 function NodeInput(props) {
-	const self={
-		changeFile:(ev)=>{
+	let [node, setNode] = useState('');
 
+	const self={
+		changeURI:(ev)=>{
+			setNode(ev.target.value);
+		},
+		saveNode:()=>{
+			//console.log(node);
+			props.save(node.trim());
 		},
 	}
 
-	useEffect(() => {
-
-    },[]);
-
 	return (
 		<Row className = "pt-4" >
-			<Col lg = { 12 } xs = { 12 } className = "pt-2" >
-				<Form.Control size = "lg" type = "text" placeholder = "Add target anchor node ..." onChange = { self.changeFile }/>
+			<Col lg = { 9 } xs = { 9 } className = "pt-2" >
+				<Form.Control size = "lg" type = "text" placeholder = "Add target anchor node ..." onChange = { self.changeURI }/>
+			</Col>
+			<Col lg = { 3 } xs = { 3 } className = "pt-2 text-end" >
+				<Button size = "md" className = "mt-1" variant = "primary" onClick = { self.saveNode } > Save </Button>
 			</Col>
         </Row>
 	);
