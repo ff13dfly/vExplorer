@@ -1,7 +1,7 @@
-import tools from './tools.js';
+//import tools from './tools.js';
 
 //autoload JS and CSS from anchor network
-//regroup the code and order
+
 let search=null;
 let viewer=null;
 
@@ -23,7 +23,6 @@ const self={
             if(!res.protocol || (!res.protocol.ext && !res.protocol.lib)){
                 order.push(an);
             }else{
-                //console.log('ready to solve complex order');
                 const qu={
                     entry:an,
                     lib:res.protocol && res.protocol.lib?res.protocol.lib:[],
@@ -37,7 +36,6 @@ const self={
             }
             if(res.protocol && res.protocol.lib){
                 for(let i=res.protocol.lib.length;i>0;i--) list.unshift(res.protocol.lib[i-1]);
-                //for(let i=0;i<res.protocol.lib.length;i++) list.unshift(res.protocol.lib[i]);
             }
 
             if(list.length===0) return ck && ck(cache,order);
@@ -45,7 +43,6 @@ const self={
         });
     },
     getAnchor:(anchor,block,ck)=>{
-        //console.log(anchor);
         if(!anchor) return ck && ck(anchor,'');
         search(anchor, (res)=>{
             if(!res || (!res.owner)) return ck && ck(anchor,'');
@@ -55,8 +52,6 @@ const self={
         });
     },
     decodeLib:(dt)=>{
-        //console.log(dt);
-
         const result={type:'error',data:''};
         if(dt.error){
             result.error=dt.error;
@@ -77,17 +72,14 @@ const self={
 
         //solve raw problem; hex to ascii
         if(dt.raw.substr(0, 2).toLowerCase()==='0x'){
-            result.data=tools.hex2str(dt.raw);
+            result.data=decodeURIComponent(dt.raw.slice(2).replace(/\s+/g, '').replace(/[0-9a-f]{2}/g, '%$&'));
         }else{
             result.data=dt.raw;
         }
-        
         return result;
     },
     
     getComplexOrder:(name,map,queue,hold)=>{
-        //console.log(map);
-        //console.log(`Working on ${name},hold ${JSON.stringify(hold)}`);
         if(!queue) queue=[];        //获取的
         if(!hold) hold=[];          //1.用来表达处理状态
 
@@ -96,12 +88,6 @@ const self={
 
         const last=hold.length!==0?hold[hold.length-1]:null;
         const recover=(last!==null&&last.name===name)?hold.pop():null;
-
-        //if(recover!==null){
-            //console.log(`Recover:${JSON.stringify(recover)},hold:${JSON.stringify(hold)}`);
-            //console.log(`Name:${name},queue:${JSON.stringify(queue)}`);
-            //return false;
-        //}
 
         //1.check lib complex;
         if(row.lib && row.lib.length>0){
@@ -140,7 +126,6 @@ const self={
                 if(recover.ext!==undefined && recover.ext!==row.ext.length){
                     for(let i=recover.ext+1;i<row.ext.length;i++){
                         const ext=row.ext[i];
-                        //console.log('ready to check lib:'+ext);
                         if(map[ext]===true){
                             queue.push(ext);
                         }else{
@@ -152,7 +137,6 @@ const self={
             }else{
                 for(let i=0;i<row.ext.length;i++){
                     const ext=row.ext[i];
-                    //console.log('ready to check lib:'+ext);
                     if(map[ext]===true){
                         queue.push(ext);
                     }else{
@@ -164,8 +148,6 @@ const self={
         }
 
         if(hold.length!==0){
-            //console.log('ready to recover');
-            //recover from interrupt
             const last=hold[hold.length-1];
             return self.getComplexOrder(last.name,map,queue,hold);
         }
@@ -243,7 +225,7 @@ const self={
                 }
             }
         }
-        //console.log(`Result:${JSON.stringify(queue)},complex lib:${JSON.stringify(complex)}`);
+
         return queue;
     },
     regroupCode:(map,order)=>{
@@ -256,7 +238,7 @@ const self={
         let failed={};
 
         const ods=self.mergeOrder(order);
-        console.log(`Plain lib array: ${JSON.stringify(ods)}`);
+        //console.log(`Plain lib array: ${JSON.stringify(ods)}`);
         for(let i=0;i<ods.length;i++){
             const row=ods[i];
             if(done[row]) continue;

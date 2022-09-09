@@ -4,7 +4,6 @@ import { Row,Col } from 'react-bootstrap';
 import tools from '../lib/tools.js';
 import RPC from '../lib/rpc.js';
 import Loader from '../lib/loader.js';
-import { cssNumber } from 'jquery';
 
 function AnchorApp(props) {
     const self={

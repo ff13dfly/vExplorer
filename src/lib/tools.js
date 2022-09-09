@@ -12,6 +12,7 @@ const tools = {
 		return str;
 	},
 	hex2str: (hex) => {
+		//can not solve utf8
 		if (!hex) return false;
 		var trimedStr = hex.trim();
 		var rawStr = trimedStr.substr(0, 2).toLowerCase() === "0x" ? trimedStr.substr(2) : trimedStr;
@@ -24,6 +25,9 @@ const tools = {
 			resultStr.push(String.fromCharCode(curCharCode));
 		}
 		return resultStr.join("");
+	},
+	hex2UTF8:(hex)=>{
+		return decodeURIComponent(hex.slice(2).replace(/\s+/g, '').replace(/[0-9a-f]{2}/g, '%$&'));
 	},
 	hex2ab: (hex) => {
 		const typedArray = new Uint8Array(hex.match(/[\da-f]{2}/gi).map(function (h) {

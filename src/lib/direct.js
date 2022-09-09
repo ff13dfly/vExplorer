@@ -34,7 +34,6 @@ const self = {
 			}
 			unsub();
 		}).then((un)=>{
-			//console.log(un);
 			unsub=un;
 		});
 	},
@@ -48,13 +47,14 @@ const self = {
 			wsAPI.rpc.chain.getBlock(hash).then((dt) => {                      
 				if (dt.block.extrinsics.length === 1) return ck && ck(false);
 				const exs = self.filter(dt,'setAnchor');
-				//console.log(exs);
 				let raw=null;
 				for (let i = 0; i < exs.length; i++) {
 					const data = exs[i].args;
 					if(data.key.toLocaleLowerCase()!== anchor) continue;
 					if(data.protocol) data.protocol=JSON.parse(data.protocol);
 					if(data.protocol.type === "data" && data.protocol.format === "JSON") data.raw=JSON.parse(data.raw);
+					//hex2str
+					
 					result.raw=data;
 				}
 				ck && ck(result);
