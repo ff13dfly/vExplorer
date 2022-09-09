@@ -1,3 +1,5 @@
+import tools from './tools.js';
+
 //autoload JS and CSS from anchor network
 //regroup the code and order
 let search=null;
@@ -54,6 +56,7 @@ const self={
     },
     decodeLib:(dt)=>{
         //console.log(dt);
+
         const result={type:'error',data:''};
         if(dt.error){
             result.error=dt.error;
@@ -71,7 +74,14 @@ const self={
             return result;
         }
         result.type=proto.format;
-        result.data=dt.raw;
+
+        //solve raw problem; hex to ascii
+        if(dt.raw.substr(0, 2).toLowerCase()==='0x'){
+            result.data=tools.hex2str(dt.raw);
+        }else{
+            result.data=dt.raw;
+        }
+        
         return result;
     },
     

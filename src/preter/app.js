@@ -4,6 +4,7 @@ import { Row,Col } from 'react-bootstrap';
 import tools from '../lib/tools.js';
 import RPC from '../lib/rpc.js';
 import Loader from '../lib/loader.js';
+import { cssNumber } from 'jquery';
 
 function AnchorApp(props) {
     const self={
@@ -17,29 +18,37 @@ function AnchorApp(props) {
             } else {
                 document.getElementsByTagName('head')[0].appendChild(scp);
             }
+            return true;
         },
         loadCSS:(code)=>{
-
+            //console.log(code);
+            var head = document.getElementsByTagName('head')[0];
+            var style = document.createElement('style');
+            var cmap=document.createTextNode(code);
+            style.appendChild(cmap);
+            head.appendChild(style);
+            return true;
         },
-    }
+    };
 
     useEffect(() => {
-        //console.log(props.raw);
-        const cApp=new Function("agent", "con", "error", props.raw);
-        if(!cApp) return false;
-
         if(props.protocol && props.protocol.lib){
             Loader(
                 props.protocol.lib,
                 {viewer:RPC.common.view,search:RPC.common.search},
                 (code)=>{
-                    //console.log(code);
                     self.loadJS(code.js);
-                    cApp(RPC,'#app_container',code.failed);
+                    self.loadCSS(code.css);
+
+                    const cApp=new Function("agent", "con", "error", props.raw);
+                    if(!cApp) return false;
+                    cApp(RPC,'app_container',code.failed);
                 }
             );
         }else{
-            cApp(RPC,'#app_container',{});
+            const cApp=new Function("agent", "con", "error", props.raw);
+            if(!cApp) return false;
+            cApp(RPC,'app_container',{});
         }
     });
 

@@ -3,6 +3,7 @@ import { useEffect,useState } from 'react';
 
 import Server from '../common/server';
 import ListNode from '../common/listNode';
+import NodeInput from '../common/node';
 
 import RPC from '../lib/rpc.js';
 
@@ -32,10 +33,13 @@ function Setting(props) {
 					<Col lg = { 12 } xs = { 12 }>
 						<ListNode list={list} start={selected} change={self.change}/>
 					</Col>
-					<Col lg = { 6 } xs = { 6 } className = "pt-4">
+					<Col lg = { 12 } xs = { 12 }>
+						<NodeInput />
+					</Col>
+					<Col lg = { 6 } xs = { 6 } className = "navbar-fixed-bottom pt-4">
 						<Button size = "lg" variant = "primary" onClick = { self.clean } > Clean </Button>{' '}
 					</Col> 
-					<Col lg = { 6 } xs = { 6 } className = "pt-4 text-end">
+					<Col lg = { 6 } xs = { 6 } className = "navbar-fixed-bottom pt-4 text-end">
 						<Button size = "lg" variant = "warning" onClick = { self.fresh } > Fresh </Button>{' '}
 					</Col>
 				</Row>

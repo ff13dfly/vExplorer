@@ -440,7 +440,7 @@ function App(props) {
            self.forceStart();
         }
         self.initPage(start,(res)=>{
-            test.decode();
+            //test.decode();
             //console.log(RPC);
             //test.history();
             //test.search();
