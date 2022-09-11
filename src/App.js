@@ -375,6 +375,28 @@ function App(props) {
             });
             ck && ck(true);
         },
+        verify:(ck)=>{
+            const k = keys.jsonFile;
+            console.log('hello, I am running...'+k);
+            if (localStorage.getItem(k) == null) {
+                return ck && ck(false);
+            } else {
+                setContent(
+                    (< Sign accountKey={k}
+                        callback={
+                            (pair) => {
+                                console.log(pair);
+                                self.handleClose();
+                                ck && ck(pair);
+                            }
+                        }
+                    />)
+                );
+                setTitle((<span className="text-warning" >Verifying</span>));
+                self.handleShow();
+            }
+        },
+        
     }
 
     let [dom, setDom] = useState((< Search onCheck={self.check}/>));
@@ -448,11 +470,13 @@ function App(props) {
     };
     
     useEffect(() => {
+        //1.start tab init
         start=self.getStart();
         if(!start.account){
            start.account=self.getAddress();
            self.forceStart();
         }
+
         self.initPage(start,(res)=>{
             //test.decode();
             //console.log(RPC);
@@ -460,6 +484,11 @@ function App(props) {
             //test.search();
             //test.view();
             //test.free();
+
+            //2.1.PRC verify function set
+            RPC.setExtra('verify',self.verify);
+
+            //2.2.show Error information
             if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
         });
     },[]);

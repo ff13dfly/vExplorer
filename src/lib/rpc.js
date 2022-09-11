@@ -124,7 +124,7 @@ const RPC={
 	empty:true,			//是否有入口anchor
 	init:(start,ck)=>{
 		//console.log('RPC init before group by '+JSON.stringify(start));
-		self.group(start,()=>{
+		self.group(start,() => {
 			RPC.ready=false;
 			RPC.empty=true;
 			self.destory();
@@ -142,6 +142,9 @@ const RPC={
 				ck && ck(true);
 			});
 		});
+	},
+	setExtra:(name,fn) => {
+		RPC.extra[name]=fn;
 	},
 };
 

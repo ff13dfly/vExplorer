@@ -171,6 +171,7 @@ const self = {
 	write:(pair,anchor,raw,protocol,ck)=>{
 		anchor=anchor.toLocaleLowerCase();
 		if(wsAPI===null) return ck && ck(false);
+		if(typeof protocol !== 'string') protocol=JSON.stringify(protocol);
 		wsAPI.tx.anchor.setAnchor(anchor, raw, protocol).signAndSend(pair,(res) => {
 			ck && ck(res);
 		});

@@ -31,6 +31,7 @@ function AnchorApp(props) {
     };
 
     useEffect(() => {
+        console.log(RPC);
         if(props.protocol && props.protocol.lib){
             Loader(
                 props.protocol.lib,
@@ -47,7 +48,7 @@ function AnchorApp(props) {
         }else{
             const cApp=new Function("agent", "con", "error", props.raw);
             if(!cApp) return false;
-            cApp(RPC,'app_container',{});
+            cApp(RPC,'app_container',null);
         }
     });
 

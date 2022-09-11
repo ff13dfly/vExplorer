@@ -229,8 +229,7 @@ const self={
         return queue;
     },
     regroupCode:(map,order)=>{
-        console.log(map);
-        
+        //console.log(map);
         const decode=self.decodeLib;
         let js='';
         let css='';
@@ -238,7 +237,7 @@ const self={
         let failed={};
 
         const ods=self.mergeOrder(order);
-        //console.log(`Plain lib array: ${JSON.stringify(ods)}`);
+        console.log(`Plain lib array: ${JSON.stringify(ods)}`);
         for(let i=0;i<ods.length;i++){
             const row=ods[i];
             if(done[row]) continue;
