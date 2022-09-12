@@ -72,15 +72,27 @@ const self = {
         });
         
     },
+    lib:(anchor,ck)=>{
+        const params={
+            fun:"lib",
+            service:"vHistory",
+            anchor:anchor,
+            spam:spam,
+        };
+        self.pass(params,(res)=>{
+            ck && ck(res.data);
+        });
+    },
     target:(block, anchor, owner,ck)=>{
         //console.log(anchor);
         const params={
             fun:"target",
             service:"vHistory",
             anchor:anchor.toLocaleLowerCase(),
-            block:block,
+            //block:block,
             spam:spam,
         };
+        if(parseInt(block)>0) params.block=parseInt(block);
         self.pass(params,(res)=>{
             ck && ck(res.data);
         });
@@ -211,6 +223,7 @@ const Gateway={
     },
     extra:{
         free:self.free,
+        lib:self.lib,
     },
 };
 

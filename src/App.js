@@ -467,6 +467,21 @@ function App(props) {
             const res=tools.default.strToU8("你好");
             console.log(res);
         },
+        lib:()=>{
+            if(!RPC.extra.lib) return console.log('No lib function');
+            RPC.extra.lib('demo',(res)=>{
+                console.log(res);
+            })
+        },
+        auto:()=>{
+            //test.decode();
+            //console.log(RPC);
+            //test.history();
+            //test.search();
+            //test.view();
+            //test.free();
+            //test.lib();
+        },
     };
     
     useEffect(() => {
@@ -478,13 +493,7 @@ function App(props) {
         }
 
         self.initPage(start,(res)=>{
-            //test.decode();
-            //console.log(RPC);
-            //test.history();
-            //test.search();
-            //test.view();
-            //test.free();
-
+            test.auto();
             //2.1.PRC verify function set
             RPC.setExtra('verify',self.verify);
 

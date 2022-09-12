@@ -46,6 +46,7 @@ const self={
         if(!anchor) return ck && ck(anchor,'');
         search(anchor, (res)=>{
             if(!res || (!res.owner)) return ck && ck(anchor,'');
+            if(res.raw) return ck && ck(anchor,res.raw);
             viewer(block===0?res.blocknumber:block,anchor,res.owner,(rs)=>{
                 ck && ck(anchor,rs.raw);
             });
@@ -261,6 +262,7 @@ const Loader =(list,RPC,ck)=>{
     search=RPC.search;
     self.getLibs(list,(dt,order)=>{                
         const code=self.regroupCode(dt,order);
+        //console.log(code);
         ck && ck(code);
     });
 };

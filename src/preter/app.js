@@ -28,27 +28,35 @@ function AnchorApp(props) {
             head.appendChild(style);
             return true;
         },
+        autoLoad:(code)=>{
+            if(code.js) self.loadJS(code.js);
+            if(code.css) self.loadCSS(code.css);
+
+            const cApp=new Function("agent", "con", "error", props.raw);
+            if(!cApp) return false;
+            cApp(RPC,'app_container',code.failed?code.failed:null);
+            return true;
+        },
     };
 
     useEffect(() => {
-        console.log(RPC);
-        if(props.protocol && props.protocol.lib){
-            Loader(
-                props.protocol.lib,
-                {viewer:RPC.common.view,search:RPC.common.search},
-                (code)=>{
-                    self.loadJS(code.js);
-                    self.loadCSS(code.css);
-
-                    const cApp=new Function("agent", "con", "error", props.raw);
-                    if(!cApp) return false;
-                    cApp(RPC,'app_container',code.failed);
-                }
-            );
+        //console.log(RPC)
+        if(RPC.start.gateway===true && RPC.extra.lib){
+            RPC.extra.lib(props.anchor,(code)=>{
+                self.autoLoad(code);
+            });
         }else{
-            const cApp=new Function("agent", "con", "error", props.raw);
-            if(!cApp) return false;
-            cApp(RPC,'app_container',null);
+            if(props.protocol && props.protocol.lib){
+                Loader(
+                    props.protocol.lib,
+                    {viewer:RPC.common.view,search:RPC.common.search},
+                    (code)=>{
+                        self.autoLoad(code);
+                    }
+                );
+            }else{
+                self.autoLoad({failed:null});
+            }
         }
     });
 
