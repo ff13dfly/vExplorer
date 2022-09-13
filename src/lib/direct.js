@@ -61,11 +61,14 @@ const self = {
 			});
 		});
 	},
-	filter: (dt, method) => {
+	filter: (exs, method) => {
 		let arr = [];
-        dt.block.extrinsics.forEach((ex, index) => {
+        exs.block.extrinsics.forEach((ex, index) => {
             const dt=ex.toHuman();
-            if (index !== 0 && dt.method.method === method) {
+			//console.log(dt);
+            if (index !== 0 && dt.method.method === method){
+				const res=dt.method;
+				res.owner=dt.signer.Id;
                 arr.push(dt.method);
             }
         });
@@ -217,22 +220,23 @@ const self = {
 		if(wsAPI===null) return ck && ck(false);
 		wsAPI.rpc.chain.subscribeFinalizedHeads((lastHeader) => {
 			const lastHash = lastHeader.hash.toHex();
+			//console.log(lastHeader);
+			//let result = { owner: owner, blocknumber: block, name: anchor,raw:{} };
 			wsAPI.rpc.chain.getBlock(lastHash).then((dt) => {
-				const ans = self.filter(dt,'setAnchor');
+
+				if (dt.block.extrinsics.length === 1) return ck && ck(false);
+				const exs = self.filter(dt,'setAnchor');
+				
 				const list = [];
-				for (let i = 0; i < ans.length; i++) {
-					// const row = ans[i];
-					// const account = row.signature.signer.id;
-					// const key = tools.hex2str(row.method.args.key);
-					// const adata = row.method.args;
-					// const obj = {
-					// 	block: lastHeader.number,
-					// 	account: account,
-					// 	anchor: key,
-					// 	raw: adata.raw,
-					// 	protocol: JSON.parse(tools.hex2str(adata.protocol)),
-					// }
-					// list.push(obj);
+				for (let i = 0; i < exs.length; i++) {
+					const data = exs[i].args;
+					if(data.protocol) data.protocol=JSON.parse(data.protocol);
+					if(data.protocol.type === "data" && data.protocol.format === "JSON") data.raw=JSON.parse(data.raw);
+					data.block=parseInt(lastHeader.number.toHuman().replace(/,/gi, ''));
+					data.account=exs[i].owner;
+					data.anchor=data.key;
+					delete data.key;
+					list.push(data);
 				}
 				ck && ck(list);
 			});
@@ -261,6 +265,7 @@ const Direct={
 		sell:self.sell,
 		buy:self.buy,
 		market:self.market,
+		subscribe:self.listening,
 	},
 }
 

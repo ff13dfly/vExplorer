@@ -8,7 +8,6 @@ function Data(props){
     }
     //console.log(props);
     const pt=props.protocol;
-    console.log(pt);
     
     //let raw=props.raw.substr(0, 2).toLowerCase()==='0x'?tools.hex2str(props.raw) :props.raw;
     let raw='';
