@@ -200,7 +200,7 @@ function App(props) {
             }
         },
         check: (anchor) => {
-            //console.log(anchor);
+            RPC.common.clean();     //stop listening
             if (!anchor) {
                 setResult('');
                 RPC.common.market((list)=>{

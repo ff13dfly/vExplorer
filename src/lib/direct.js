@@ -1,5 +1,6 @@
 let wsAPI = null;
 let account='';
+let unlistening=null;	//listening的回调；
 
 const self = {
     setAccount:function(acc){
@@ -13,7 +14,7 @@ const self = {
 		if(wsAPI===null) return ck && ck(false);
 		let unsub=null;
 		let unlist=null;
-		//console.log(anchor);
+
 		wsAPI.query.anchor.anchorOwner(anchor, (res) => {
 			if (res.isEmpty) {
 				ck && ck({ owner: 0, blocknumber: 0, anchor: anchor });
@@ -216,8 +217,21 @@ const self = {
 			ck && ck(res);
 		})
 	},
+	clean:()=>{
+		if(unlistening!=null){
+			unlistening();
+			unlistening=null;
+		}
+		return true;
+	},
 	listening: (ck) => {
 		if(wsAPI===null) return ck && ck(false);
+		
+		if(unlistening!=null){
+			unlistening();
+			unlistening=null;
+		}
+
 		wsAPI.rpc.chain.subscribeFinalizedHeads((lastHeader) => {
 			const lastHash = lastHeader.hash.toHex();
 			//console.log(lastHeader);
@@ -240,6 +254,8 @@ const self = {
 				}
 				ck && ck(list);
 			});
+		}).then((un)=>{
+			unlistening=un;
 		});
 	},
 };
@@ -266,6 +282,7 @@ const Direct={
 		buy:self.buy,
 		market:self.market,
 		subscribe:self.listening,
+		clean:self.clean,
 	},
 }
 
