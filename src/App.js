@@ -1,9 +1,7 @@
-//import 'animate.css';
-import { WOW } from 'wowjs';
-
 import { Navbar, Container, Nav, Row, Col, Modal } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 
+import { WOW } from 'wowjs';
 
 import Account from './pages/account';
 import Setting from './pages/setting';
@@ -19,90 +17,98 @@ import Error from './common/error';
 import RPC from './lib/rpc.js';
 
 
-let start={
-    account:'',                     //使用的连接账号
+let start = {
+    account: '',                     //使用的连接账号
     //node:'ws://localhost:9944',     //连接的入口node
-    node:'wss://network.metanchor.net',     //连接的入口node
-    anchor:'anchor',                //entry anchor
-    gateway:false,                  //使用启用gateway
-    server:'',                      //gateway的URI
+    node: 'wss://network.metanchor.net',     //连接的入口node
+    anchor: 'anchor',                //entry anchor
+    gateway: false,                  //使用启用gateway
+    server: '',                      //gateway的URI
 };
 
 const keys = {
     jsonFile: 'js_file_name',
     anchorList: 'anchor_list',
-    startNode:'start_node',
+    startNode: 'start_node',
 }
 let cur = 'home';
 
 function App(props) {
     let [content, setContent] = useState('');
     let [show, setShow] = useState(false);
-  
-    const UI={
-        map:{},
-        animates:{
-            out:"animate__backOutUp",
-            in:"animate__backOutDown",
+
+    const UI = {
+        map: {},
+        animates: {
+            out: "animate__backOutUp",
+            in: "animate__backOutDown",
         },
-        regComponent:(name,cls)=>{
-            UI.map[name]=cls;
+        regComponent: (name, cls) => {
+            UI.map[name] = cls;
             return true;
         },
-        autoHide:(name,way,hide)=>{
-            var cls=UI.map[name];
-            var ani=UI.animates[way];
-            if(!cls || !ani) return false;
+        autoHide: (name, way, hide) => {
+            var cls = UI.map[name];
+            var ani = UI.animates[way];
+            if (!cls || !ani) return false;
 
             var wow = new WOW(
                 {
-                    boxClass: cls, 
+                    boxClass: cls,
                     animateClass: ani,
                     offset: 100,
                     callback: function (box) {
                         console.log(box);
-                        if(hide) box.style.display = "none";
+                        if (hide) box.style.display = "none";
                     },
                     scrollContainer: null
                 }
             );
-            setTimeout(function () {
-                wow.init();
-            }, 500);
+            wow.init();
+            // setTimeout(function () {
+            //     wow.init();
+            // }, 500);
         },
-        autoShow:(name,ani)=>{
-
+        autoShow: (name,ani) => {
+            var cls = UI.map[name];
+            var elements = document.getElementsByClassName(cls);
+            if(!elements || elements.length<1) return false;
+            var box=elements[0];
+            box.style.display = "block";
+            
         },
-        navHide:()=>{
+        navHide: () => {
             console.log("Nav hide");
         },
-        navShow:()=>{
+        navShow: () => {
             console.log("Nav show");
         },
     }
 
     const self = {
-        router: () => {
-            self.render(cur);
+        router: (ev) => {
+            var hash=ev.target.getAttribute('href');
+            if(!hash) return false;
+            self.render(hash.slice(1));
         },
         render: (router) => {
             self.cleanDom();
             switch (router) {
                 case 'home':
-                    if(RPC.ready){
-                        RPC.common.market((list)=>{
-                            setMarket((< ListSell  list={list} buy={self.buy} />));
+                    if (RPC.ready) {
+                        RPC.common.market((list) => {
+                            setMarket((< ListSell list={list} buy={self.buy} />));
                         });
-                    }else{
-                        setMarket(< Error data={'Waiting ...'}/>);
+                    } else {
+                        setMarket(< Error data={'Waiting ...'} />);
                     }
 
-                    setDom((< Search onCheck={(name) => { self.check(name) }} UI={UI}/>));
+                    setDom((< Search onCheck={(name) => { self.check(name) }} UI={UI} />));
                     break;
 
                 case 'setting':
                     setMarket('');
-                    setDom(((< Setting fresh={self.fresh} clean={self.clean} save={self.save}/>)));
+                    setDom(((< Setting fresh={self.fresh} clean={self.clean} save={self.save} />)));
                     break;
 
                 case 'anchor':
@@ -110,7 +116,7 @@ function App(props) {
                         onCheck={self.isOwner}
                         onSell={self.sell}
                         onUpdate={self.update}
-                        />));
+                    />));
                     break;
 
                 case 'account':
@@ -121,8 +127,8 @@ function App(props) {
                     break;
 
                 default:
-                    setMarket(''); 
-                    setDom((< Search onCheck={(name) => { self.check(name) }}  UI={UI}/>));
+                    setMarket('');
+                    setDom((< Search onCheck={(name) => { self.check(name) }} UI={UI} />));
                     break;
             }
         },
@@ -190,13 +196,13 @@ function App(props) {
                     console.log(res.data.free.toBigInt());
 
                     //3.实现anchor的购买
-                    self.doBuy(anchor,(res)=>{
+                    self.doBuy(anchor, (res) => {
                         console.log(res);
                     });
                 });
             });
         },
-        doBuy : (anchor, ck) => {
+        doBuy: (anchor, ck) => {
             const k = keys.jsonFile;
             if (localStorage.getItem(k) == null) {
                 return ck && ck(false);
@@ -217,7 +223,7 @@ function App(props) {
                 self.handleShow();
             }
         },
-        doInit:(anchor,ck)=>{
+        doInit: (anchor, ck) => {
             const k = keys.jsonFile;
             if (localStorage.getItem(k) == null) {
                 return ck && ck(false);
@@ -226,9 +232,9 @@ function App(props) {
                     (< Sign accountKey={k}
                         callback={
                             (pair, name) => {
-                                const raw="This anchor is buy from vExplorer.";
-                                const protocol=JSON.stringify({type:"data"});
-                                RPC.common.write(pair, anchor,raw,protocol, (res) => {
+                                const raw = "This anchor is buy from vExplorer.";
+                                const protocol = JSON.stringify({ type: "data" });
+                                RPC.common.write(pair, anchor, raw, protocol, (res) => {
                                     //console.log(res);
                                     setResult('');
                                     self.handleClose();
@@ -246,8 +252,8 @@ function App(props) {
             RPC.common.clean();     //stop listening
             if (!anchor) {
                 setResult('');
-                RPC.common.market((list)=>{
-                    setMarket((< ListSell  list={list} buy={self.buy} />));
+                RPC.common.market((list) => {
+                    setMarket((< ListSell list={list} buy={self.buy} />));
                 });
                 return false;
             }
@@ -255,14 +261,14 @@ function App(props) {
             RPC.common.search(anchor, self.optResult);
         },
         optResult: (dt) => {
-            if(dt===false) return setResult(< Error data='No data to show.' />);
+            if (dt === false) return setResult(< Error data='No data to show.' />);
             if (dt.owner === 0) {
                 setResult(< Buy anchor={dt.anchor}
                     buy={self.doInit}
                 />);
                 setOnsell('');
-            }else{
-                if(dt.raw){
+            } else {
+                if (dt.raw) {
                     if (!dt.raw.protocol) {
                         setResult(< Error data='No data to show.' />);
                     } else {
@@ -274,7 +280,7 @@ function App(props) {
                             UI={UI}
                         />);
                     }
-                }else{
+                } else {
                     const name = dt.anchor;
                     const owner = dt.owner;
                     const block = dt.blocknumber;
@@ -315,50 +321,50 @@ function App(props) {
             setResult('');
             setOnsell('');
         },
-        getStart:()=>{
-            const data=localStorage.getItem(keys.startNode);
-            if(data!==null){
-                start=JSON.parse(data);
+        getStart: () => {
+            const data = localStorage.getItem(keys.startNode);
+            if (data !== null) {
+                start = JSON.parse(data);
                 return start;
-            } 
-            localStorage.setItem(keys.startNode,JSON.stringify(start));
+            }
+            localStorage.setItem(keys.startNode, JSON.stringify(start));
             return start;
         },
-        setStart:(key,val)=>{
-            let isValid=false;
-            for(var k in start){
-                if(k===key){
-                    start[k]=val;
-                    isValid=true;
-                } 
+        setStart: (key, val) => {
+            let isValid = false;
+            for (var k in start) {
+                if (k === key) {
+                    start[k] = val;
+                    isValid = true;
+                }
             }
-            if(!isValid) return false;
-            localStorage.setItem(keys.startNode,JSON.stringify(start));
+            if (!isValid) return false;
+            localStorage.setItem(keys.startNode, JSON.stringify(start));
         },
-        forceStart:()=>{
-            localStorage.setItem(keys.startNode,JSON.stringify(start));
+        forceStart: () => {
+            localStorage.setItem(keys.startNode, JSON.stringify(start));
         },
-        cleanStart:()=>{
+        cleanStart: () => {
             localStorage.removeItem(keys.startNode);
         },
-        initStart:()=>{
-            start={
-                account:'',                     //使用的连接账号
-                node:'ws://localhost:9944',     //连接的入口node
-                anchor:'anchor',                //entry anchor
-                gateway:false,                  //使用启用gateway
-                server:'',                      //gateway的URI
+        initStart: () => {
+            start = {
+                account: '',                     //使用的连接账号
+                node: 'ws://localhost:9944',     //连接的入口node
+                anchor: 'anchor',                //entry anchor
+                gateway: false,                  //使用启用gateway
+                server: '',                      //gateway的URI
             };
             self.forceStart();
         },
-        handleClose: () => {setShow(false);},
-        handleShow: () => {setShow(true);},
-        save:(uri)=>{
-            start.node=uri;
+        handleClose: () => { setShow(false); },
+        handleShow: () => { setShow(true); },
+        save: (uri) => {
+            start.node = uri;
 
             //2.rest the RPC link
-            self.initPage(start,(res)=>{
-                if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
+            self.initPage(start, (res) => {
+                if (res === false) setMarket(< Error data={'Failed to create websocket link to ' + start.node} />);
             });
             self.handleClose();     //关闭弹窗
 
@@ -366,20 +372,20 @@ function App(props) {
             cur = 'home';
             self.render(cur);
         },
-        fresh:(obj)=>{
+        fresh: (obj) => {
             //1.combine start data
-            let isChanged=false;
-            for(var k in obj){
-                if(start[k]!==obj[k]){
-                    isChanged=true;
-                    start[k]=obj[k];
-                } 
+            let isChanged = false;
+            for (var k in obj) {
+                if (start[k] !== obj[k]) {
+                    isChanged = true;
+                    start[k] = obj[k];
+                }
             }
-            if(isChanged) self.forceStart();
+            if (isChanged) self.forceStart();
 
             //2.rest the RPC link
-            self.initPage(start,(res)=>{
-                if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
+            self.initPage(start, (res) => {
+                if (res === false) setMarket(< Error data={'Failed to create websocket link to ' + start.node} />);
             });
             self.handleClose();     //关闭弹窗
 
@@ -387,42 +393,42 @@ function App(props) {
             cur = 'home';
             self.render(cur);
         },
-        clean:()=>{
+        clean: () => {
             self.cleanStart();
             self.initStart();
-            self.initPage(start,(res)=>{
-                if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
+            self.initPage(start, (res) => {
+                if (res === false) setMarket(< Error data={'Failed to create websocket link to ' + start.node} />);
             });
             self.handleClose();     //关闭弹窗
             cur = 'home';
             self.render(cur);
         },
-        initPage:(entry,ck)=>{
+        initPage: (entry, ck) => {
             //console.log('Started from App.js initPage : '+JSON.stringify(entry));
-            RPC.init(entry,(res)=>{
+            RPC.init(entry, (res) => {
                 //console.log('RPC init result : '+ success);
-                if(res===false) return ck && ck(false);
-                if(res.error){
-                    setMarket(< Error data={'No entry anchor.'}/>);
+                if (res === false) return ck && ck(false);
+                if (res.error) {
+                    setMarket(< Error data={'No entry anchor.'} />);
                     self.initStart();
                     //return self.initPage(self.getStart(),ck);
                     setTimeout(() => {
                         self.showMarket(ck);
                     }, 1000);
-                }else{
+                } else {
                     self.showMarket(ck);
                 }
             });
         },
-        showMarket:(ck)=>{
-            RPC.common.market((list)=>{
-                setMarket((< ListSell  list={list} buy={self.buy} />));
+        showMarket: (ck) => {
+            RPC.common.market((list) => {
+                setMarket((< ListSell list={list} buy={self.buy} />));
             });
             ck && ck(true);
         },
-        verify:(ck)=>{
+        verify: (ck) => {
             const k = keys.jsonFile;
-            console.log('hello, I am running...'+k);
+            console.log('hello, I am running...' + k);
             if (localStorage.getItem(k) == null) {
                 return ck && ck(false);
             } else {
@@ -441,86 +447,86 @@ function App(props) {
                 self.handleShow();
             }
         },
-        
+
     }
 
 
 
-    let [dom, setDom] = useState((< Search onCheck={self.check}  UI={UI}/>));
+    let [dom, setDom] = useState((< Search onCheck={self.check} UI={UI} />));
     let [result, setResult] = useState('');
     let [title, setTitle] = useState('');
     let [onsell, setOnsell] = useState('');
-    let [market, setMarket] = useState(< Error data={'Linking ...'}/>);
+    let [market, setMarket] = useState(< Error data={'Linking ...'} />);
 
-    const test={
-        gateway:()=>{
-            RPC.gateway.init.spam((res)=>{
-                const anchor='hello';
-                RPC.gateway.view(anchor,(his)=>{
+    const test = {
+        gateway: () => {
+            RPC.gateway.init.spam((res) => {
+                const anchor = 'hello';
+                RPC.gateway.view(anchor, (his) => {
                     console.log(his);
                 });
             });
         },
-        history:()=>{
-            const cfg={step:20,page:1};
+        history: () => {
+            const cfg = { step: 20, page: 1 };
 
             console.log('Anchor histroy:');
-            RPC.common.history('hello',(res)=>{
+            RPC.common.history('hello', (res) => {
                 console.log(res);
-            },cfg);
+            }, cfg);
         },
-        search:()=>{
+        search: () => {
             //console.log(RPC);
             console.log('Anchor search:');
-            RPC.common.search('hello',(res)=>{
+            RPC.common.search('hello', (res) => {
                 console.log(res);
             });
         },
-        view:()=>{
+        view: () => {
             console.log('Anchor view:');
-            const bk=1509;
-            RPC.common.view(bk,'hello','',(res)=>{
+            const bk = 1509;
+            RPC.common.view(bk, 'hello', '', (res) => {
                 console.log(res);
             });
         },
-        free:()=>{
-            const rand=(m,n)=>{return Math.floor(Math.random() * (m-n+1) + n)};
-            const char=(n,pre)=>{
-                n=n||7;pre=pre||'';
-                for(let i=0;i<n;i++)pre+=i%2?String.fromCharCode(rand(65,90)):String.fromCharCode(rand(97,122));
+        free: () => {
+            const rand = (m, n) => { return Math.floor(Math.random() * (m - n + 1) + n) };
+            const char = (n, pre) => {
+                n = n || 7; pre = pre || '';
+                for (let i = 0; i < n; i++)pre += i % 2 ? String.fromCharCode(rand(65, 90)) : String.fromCharCode(rand(97, 122));
                 return pre;
             };
 
             console.log('Anchor free:');
-            const anchor="hello";
-            const ctx={
-                title:"Break news!"+char(32),
-                content:"Today,we have 4M volume."
+            const anchor = "hello";
+            const ctx = {
+                title: "Break news!" + char(32),
+                content: "Today,we have 4M volume."
             }
-            const raw=JSON.stringify(ctx);
-            if(!RPC.extra.free) return console.log('No free function on gateway');
-            RPC.extra.free(anchor,raw,(res)=>{
+            const raw = JSON.stringify(ctx);
+            if (!RPC.extra.free) return console.log('No free function on gateway');
+            RPC.extra.free(anchor, raw, (res) => {
                 console.log(res);
             });
         },
-        decode:()=>{
+        decode: () => {
             const iconv = require('iconv-lite');
             let buf = iconv.encode("汉字", 'GBK');
             let str = iconv.decode(buf, 'GBK');
             console.log(str);
 
-            const tools=require('./lib/tools.js');
+            const tools = require('./lib/tools.js');
             console.log(tools);
-            const res=tools.default.strToU8("你好");
+            const res = tools.default.strToU8("你好");
             console.log(res);
         },
-        lib:()=>{
-            if(!RPC.extra.lib) return console.log('No lib function');
-            RPC.extra.lib('demo',(res)=>{
+        lib: () => {
+            if (!RPC.extra.lib) return console.log('No lib function');
+            RPC.extra.lib('demo', (res) => {
                 console.log(res);
             })
         },
-        auto:()=>{
+        auto: () => {
             //test.decode();
             //console.log(RPC);
             //test.history();
@@ -531,71 +537,52 @@ function App(props) {
         },
     };
 
-    UI.regComponent("Nav","nav_con");
-    
+    UI.regComponent("Nav", "nav_con");
+
     useEffect(() => {
         //1.start tab init
-        start=self.getStart();
-        if(!start.account){
-           start.account=self.getAddress();
-           self.forceStart();
+        start = self.getStart();
+        if (!start.account) {
+            start.account = self.getAddress();
+            self.forceStart();
         }
 
-        self.initPage(start,(res)=>{
+        self.initPage(start, (res) => {
             test.auto();
             //2.1.PRC verify function set
-            RPC.setExtra('verify',self.verify);
+            RPC.setExtra('verify', self.verify);
 
             //2.2.show Error information
-            if(res===false) setMarket(< Error data={'Failed to create websocket link to '+start.node}/>);
+            if (res === false) setMarket(< Error data={'Failed to create websocket link to ' + start.node} />);
         });
-    },[]);
+    }, []);
 
     return (<div>
         <Navbar bg="light" expand="lg" className="nav_con">
-        <Container >
-            <Navbar.Brand href="#home" > Meta Anchor </Navbar.Brand>
-            <Navbar.Toggle aria-controls="basic-navbar-nav" />
-            <Navbar.Collapse id="basic-navbar-nav">
-                <Nav className="me-auto" >
-                    <Nav.Link href="#home" onClick={
-                        () => {
-                            cur = 'home';
-                            self.router();
-                        }
-                    } > Home </Nav.Link><Nav.Link href="#anchor"
-                        onClick={
-                            () => {
-                                cur = 'anchor';
-                                self.router();
-                            }
-                        } > Anchors </ Nav.Link>
-                    <Nav.Link href="#setting"
-                        onClick={
-                            () => {
-                                cur = 'setting';
-                                self.router();
-                            }
-                        } > Setting </Nav.Link>
-                    <Nav.Link href="#account"
-                        onClick={
-                            () => {
-                                cur = 'account';
-                                self.router();
-                            }
-                        } > My </Nav.Link>
-                </Nav> </Navbar.Collapse> </Container> </Navbar>
+            <Container >
+                <Navbar.Brand href="#home" > Meta Anchor </Navbar.Brand>
+                <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                <Navbar.Collapse id="basic-navbar-nav">
+                    <Nav className="me-auto" >
+                        <Nav.Link href="#home" onClick={self.router} > Home </Nav.Link>
+                        <Nav.Link href="#anchor" onClick={self.router} > Anchors </Nav.Link>
+                        <Nav.Link href="#setting" onClick={self.router} > Setting </Nav.Link>
+                        <Nav.Link href="#account" onClick={self.router}> My </Nav.Link>
+                    </Nav>
+                </Navbar.Collapse>
+            </Container>
+        </Navbar>
         <Row>
-        <Col lg={12} xs={12}> {dom} </Col>
-        <Col lg={12} xs={12}> {result}</Col>
-        <Col lg={12} xs={12} className="pt-2 text-center" > {onsell} </Col>
-        <Col lg={12} xs={12} className="pt-2" >{market} </Col>
+            <Col lg={12} xs={12}> {dom} </Col>
+            <Col lg={12} xs={12}> {result}</Col>
+            <Col lg={12} xs={12} className="pt-2 text-center" > {onsell} </Col>
+            <Col lg={12} xs={12} className="pt-2" >{market} </Col>
         </Row>
         <Modal show={show} onHide={self.handleClose} >
             <Modal.Header closeButton>
                 <Modal.Title > {title} </Modal.Title>
             </Modal.Header>
-        <Modal.Body >{content}</Modal.Body>
+            <Modal.Body >{content}</Modal.Body>
         </Modal>
     </div>);
 }

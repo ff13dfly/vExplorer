@@ -27,10 +27,10 @@ function Search(props) {
 	return (
 		<Container className="search_con" data-wow-delay="1s" data-wow-duration="4s">
 			<Row>
-				<Col lg={10} xs={8} className="text-end pt-2" >
+				<Col lg={10} xs={8} className="text-end pt-4" >
 					<Form.Control size="lg" type="text" placeholder="Anchor name..." onChange={(ev) => { self.onChange(ev) }} />
 				</Col>
-				<Col lg={2} xs={4} className="text-end pt-2" >
+				<Col lg={2} xs={4} className="text-end pt-4" >
 					<Button size="lg" variant="primary" onClick={() => { self.onSave() }} > Search </Button>
 				</Col >
 			</Row>

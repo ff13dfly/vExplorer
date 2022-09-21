@@ -6,6 +6,8 @@ import RPC from '../lib/rpc.js';
 import Loader from '../lib/loader.js';
 
 function AnchorApp(props) {
+    //let [show, setShow] = useState({"display":"block"});
+
     const self = {
         loadJS: (code) => {
             const scp = document.createElement('script');
@@ -32,39 +34,35 @@ function AnchorApp(props) {
             if (code.js) self.loadJS(code.js);
             if (code.css) self.loadCSS(code.css);
 
-            const cApp = new Function("agent", "con", "error", props.raw);
-            if (!cApp) return false;
-            cApp(RPC, 'app_container', code.failed ? code.failed : null);
-            return true;
-        },
-        requestFullscreen: (id) => {
-            const docElm = document.getElementById(id);
-            if (docElm.requestFullscreen) {
-                docElm.requestFullscreen()
-            } else if (docElm.msRequestFullscreen) {
-                docElm.msRequestFullscreen()
-            } else if (docElm.mozRequestFullScreen) {
-                docElm.mozRequestFullScreen()
-            } else if (docElm.webkitRequestFullScreen) {
-                docElm.webkitRequestFullScreen()
-            }
-        },
-        exitFullScreen: () => {
-            if (document.exitFullscreen) {
-                document.exitFullscreen()
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen()
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen()
-            } else if (document.webkitCancelFullScreen) {
-                document.webkitCancelFullScreen()
-            }
+            setTimeout(()=>{
+                const cApp = new Function("agent", "con", "error", props.raw);
+                if (!cApp) return false;
+                cApp(RPC, 'app_container', code.failed ? code.failed : null);
+            },500);
         },
         autoUI:(ck)=>{
             props.UI.autoHide("Search","out",true);
             props.UI.autoHide("Nav","out",true);
-            setTimeout(ck,2000);
-            //ck && ck();
+            self.showFun();
+            ck && ck();
+        },
+        history:()=>{
+            console.log("History list");
+        },
+        exitApp:(ck)=>{
+            //console.log("Exit cApp");
+            props.UI.autoShow("Search","out");
+            props.UI.autoShow("Nav","out");
+            self.hideFuns();
+            ck && ck();
+        },
+        showFun:()=>{
+            var el=document.getElementById('exit_con');
+            el.style.display="block";
+        },
+        hideFuns:()=>{
+            var el=document.getElementById('exit_con');
+            el.style.display="none";
         },
     };
 
@@ -90,24 +88,43 @@ function AnchorApp(props) {
         });
     });
 
-    const cls = {
-        "wordWrap": "break-word",
-    }
-
-    const owner = tools.shortenAddress(props.owner, 5);
-
-    //<Col lg={6} xs={6}>
-    //<Button size="sm" variant="primary" onClick={() => {self.exitFullScreen();}}>Exit</Button>
-    //</Col>
-    //<Col lg={6} xs={6} className="text-end">
-    //    <Button size="sm" variant="primary" onClick={() => {self.requestFullscreen("app_container");}}>Fullscreen</Button>
-    //</Col>
+    const owner = tools.shortenAddress(props.owner, 8);
+    const cmap={
+        color: "red",
+        backgroud:"#EEFFFF",
+        position:"fixed",
+        right:"20px",
+        top:"6px",
+        border:"1px solid #BBBBBB",
+        borderRadius:"16px",
+        textAlign:"center",
+        width:"72px",
+        height:"32px",
+        lineHeight:"32px",
+        zIndex:999,
+    };
+    const amap={
+        height:((window.outerHeight-40)+'px'),
+        width:(window.outerWidth+'px'),
+        overFlow:"hidden",
+        margin:"0 auto",
+    };
+    const fmap={
+        height:"40px",
+        wordWrap: "break-word",
+        paddingRight:"14px",
+    };
 
     return (
         <Row>
-            <Col lg={12} xs={12} id="app_container"></Col>
-            <Col lg={3} xs={3}><Button size="sm" variant="primary" onClick={() => {self.exitFullScreen();}}>Exit</Button></Col>
-            <Col lg={9} xs={9} className="text-end"><p style={cls}>cApp on {props.block} , owner : {owner}</p></Col>
+            <div style={cmap} id="exit_con">
+                <span onClick={() => {self.history()}}>H</span> | 
+                <span onClick={() => {self.exitApp()}}> C</span>
+            </div>
+            <Col lg={12} xs={12} id="app_container" style={amap}></Col>
+            <Col lg={12} xs={12} style={fmap}>
+                <p className='text-end'> cApp on {props.block} , owner : {owner}</p>
+            </Col>
         </Row>
     );
 }
