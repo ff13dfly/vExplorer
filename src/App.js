@@ -1,3 +1,6 @@
+//import 'animate.css';
+import { WOW } from 'wowjs';
+
 import { Navbar, Container, Nav, Row, Col, Modal } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 
@@ -36,6 +39,48 @@ function App(props) {
     let [content, setContent] = useState('');
     let [show, setShow] = useState(false);
   
+    const UI={
+        map:{},
+        animates:{
+            out:"animate__backOutUp",
+            in:"animate__backOutDown",
+        },
+        regComponent:(name,cls)=>{
+            UI.map[name]=cls;
+            return true;
+        },
+        autoHide:(name,way,hide)=>{
+            var cls=UI.map[name];
+            var ani=UI.animates[way];
+            if(!cls || !ani) return false;
+
+            var wow = new WOW(
+                {
+                    boxClass: cls, 
+                    animateClass: ani,
+                    offset: 100,
+                    callback: function (box) {
+                        console.log(box);
+                        if(hide) box.style.display = "none";
+                    },
+                    scrollContainer: null
+                }
+            );
+            setTimeout(function () {
+                wow.init();
+            }, 500);
+        },
+        autoShow:(name,ani)=>{
+
+        },
+        navHide:()=>{
+            console.log("Nav hide");
+        },
+        navShow:()=>{
+            console.log("Nav show");
+        },
+    }
+
     const self = {
         router: () => {
             self.render(cur);
@@ -52,9 +97,7 @@ function App(props) {
                         setMarket(< Error data={'Waiting ...'}/>);
                     }
 
-                    setDom((< Search onCheck={
-                        (name) => { self.check(name) }}
-                    />));
+                    setDom((< Search onCheck={(name) => { self.check(name) }} UI={UI}/>));
                     break;
 
                 case 'setting':
@@ -79,7 +122,7 @@ function App(props) {
 
                 default:
                     setMarket(''); 
-                    setDom((< Search onCheck={(name) => { self.check(name) }} />));
+                    setDom((< Search onCheck={(name) => { self.check(name) }}  UI={UI}/>));
                     break;
             }
         },
@@ -228,6 +271,7 @@ function App(props) {
                             protocol={dt.raw.protocol}
                             owner={dt.owner}
                             block={dt.block}
+                            UI={UI}
                         />);
                     }
                 }else{
@@ -243,6 +287,7 @@ function App(props) {
                                 protocol={res.raw.protocol}
                                 owner={dt.owner}
                                 block={block}
+                                UI={UI}
                             />);
                         }
                     });
@@ -399,7 +444,9 @@ function App(props) {
         
     }
 
-    let [dom, setDom] = useState((< Search onCheck={self.check}/>));
+
+
+    let [dom, setDom] = useState((< Search onCheck={self.check}  UI={UI}/>));
     let [result, setResult] = useState('');
     let [title, setTitle] = useState('');
     let [onsell, setOnsell] = useState('');
@@ -483,6 +530,8 @@ function App(props) {
             //test.lib();
         },
     };
+
+    UI.regComponent("Nav","nav_con");
     
     useEffect(() => {
         //1.start tab init
@@ -503,7 +552,7 @@ function App(props) {
     },[]);
 
     return (<div>
-        <Navbar bg="light" expand="lg">
+        <Navbar bg="light" expand="lg" className="nav_con">
         <Container >
             <Navbar.Brand href="#home" > Meta Anchor </Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -537,8 +586,8 @@ function App(props) {
                         } > My </Nav.Link>
                 </Nav> </Navbar.Collapse> </Container> </Navbar>
         <Row>
-        <Col lg={12} xs={12} className="pt-2"> {dom} </Col>
-        <Col lg={12} xs={12} className="pt-2"> {result}</Col>
+        <Col lg={12} xs={12}> {dom} </Col>
+        <Col lg={12} xs={12}> {result}</Col>
         <Col lg={12} xs={12} className="pt-2 text-center" > {onsell} </Col>
         <Col lg={12} xs={12} className="pt-2" >{market} </Col>
         </Row>

@@ -60,46 +60,54 @@ function AnchorApp(props) {
                 document.webkitCancelFullScreen()
             }
         },
+        autoUI:(ck)=>{
+            props.UI.autoHide("Search","out",true);
+            props.UI.autoHide("Nav","out",true);
+            setTimeout(ck,2000);
+            //ck && ck();
+        },
     };
 
     useEffect(() => {
-        //console.log(RPC)
-        if (RPC.start.gateway === true && RPC.extra.lib) {
-            RPC.extra.lib(props.anchor, (code) => {
-                self.autoLoad(code);
-            });
-        } else {
-            if (props.protocol && props.protocol.lib) {
-                Loader(
-                    props.protocol.lib,
-                    { viewer: RPC.common.view, search: RPC.common.search },
-                    (code) => {
-                        self.autoLoad(code);
-                    }
-                );
+        self.autoUI(()=>{
+            if (RPC.start.gateway === true && RPC.extra.lib) {
+                RPC.extra.lib(props.anchor, (code) => {
+                    self.autoLoad(code);
+                });
             } else {
-                self.autoLoad({ failed: null });
+                if (props.protocol && props.protocol.lib) {
+                    Loader(
+                        props.protocol.lib,
+                        { viewer: RPC.common.view, search: RPC.common.search },
+                        (code) => {
+                            self.autoLoad(code);
+                        }
+                    );
+                } else {
+                    self.autoLoad({ failed: null });
+                }
             }
-        }
+        });
     });
 
     const cls = {
         "wordWrap": "break-word",
     }
 
-    const shorten = tools.shortenAddress;
-    const owner = shorten(props.owner, 10);
+    const owner = tools.shortenAddress(props.owner, 5);
+
+    //<Col lg={6} xs={6}>
+    //<Button size="sm" variant="primary" onClick={() => {self.exitFullScreen();}}>Exit</Button>
+    //</Col>
+    //<Col lg={6} xs={6} className="text-end">
+    //    <Button size="sm" variant="primary" onClick={() => {self.requestFullscreen("app_container");}}>Fullscreen</Button>
+    //</Col>
 
     return (
-        <Row className="pt-2" >
-            <Col lg={6} xs={6}>
-                <Button size="sm" variant="primary" onClick={() => {self.exitFullScreen();}}>Exit</Button>
-            </Col>
-            <Col lg={6} xs={6} className="text-end">
-                <Button size="sm" variant="primary" onClick={() => {self.requestFullscreen("app_container");}}>Fullscreen</Button>
-            </Col>
-            <Col lg={12} xs={12} id="app_container">Anchor application will render here...</Col>
-            <Col lg={12} xs={12}><p style={cls}>cApp Owner : {owner}</p></Col>
+        <Row>
+            <Col lg={12} xs={12} id="app_container"></Col>
+            <Col lg={3} xs={3}><Button size="sm" variant="primary" onClick={() => {self.exitFullScreen();}}>Exit</Button></Col>
+            <Col lg={9} xs={9} className="text-end"><p style={cls}>cApp on {props.block} , owner : {owner}</p></Col>
         </Row>
     );
 }

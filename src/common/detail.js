@@ -29,20 +29,19 @@ function Detail(props) {
     break;
 
     case 'app':
-      dom=(<AnchorApp anchor={name} raw={raw} owner={owner} block={block} protocol={protocol}/>);
+      dom=(<AnchorApp anchor={name} raw={raw} owner={owner} block={block} protocol={protocol} UI={props.UI}/>);
     break;
             
     default:
       dom='Unexpect anchor ['+name+'] data : '+JSON.stringify(props.raw);
     break;
   }
-
+  //<Container>
+  //</Container>
   return (
-    <Container>
-      <Row className = "pt-2" >
-        <Col lg = { 12 } xs = { 12 } className = "pt-2" >{dom}</Col>
+      <Row>
+        <Col lg = { 12 } xs = { 12 }>{dom}</Col>
       </Row>
-    </Container>
   );
 }
 export default Detail;
