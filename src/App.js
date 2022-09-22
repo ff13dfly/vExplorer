@@ -58,7 +58,7 @@ function App(props) {
                     animateClass: ani,
                     offset: 100,
                     callback: function (box) {
-                        console.log(box);
+                        //console.log(box);
                         if (hide) box.style.display = "none";
                     },
                     scrollContainer: null

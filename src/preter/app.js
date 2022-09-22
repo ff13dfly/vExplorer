@@ -54,7 +54,12 @@ function AnchorApp(props) {
             props.UI.autoShow("Search","out");
             props.UI.autoShow("Nav","out");
             self.hideFuns();
+            self.cleanApp();
             ck && ck();
+        },
+        cleanApp:()=>{
+            var el=document.getElementById('app_container');
+            el.innerHTML="";
         },
         showFun:()=>{
             var el=document.getElementById('exit_con');
