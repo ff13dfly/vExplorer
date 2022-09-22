@@ -58,16 +58,18 @@ function AnchorApp(props) {
             ck && ck();
         },
         cleanApp:()=>{
-            var el=document.getElementById('app_container');
-            el.innerHTML="";
+            document.getElementById('app_container').innerHTML="";
+            //document.getElementById('footer_con').innerHTML='';     
         },
         showFun:()=>{
-            var el=document.getElementById('exit_con');
-            el.style.display="block";
+            document.getElementById('exit_con').style.display="block";
+            document.getElementById('nav_con').style.display="block";
+            document.getElementById('footer_con').style.display="block";
         },
         hideFuns:()=>{
-            var el=document.getElementById('exit_con');
-            el.style.display="none";
+            document.getElementById('exit_con').style.display="none";
+            document.getElementById('nav_con').style.display="none";
+            document.getElementById('footer_con').style.display="none";
         },
     };
 
@@ -93,14 +95,14 @@ function AnchorApp(props) {
         });
     });
 
-    const owner = tools.shortenAddress(props.owner, 8);
+    //float operation button container
     const cmap={
         color: "red",
-        backgroud:"#EEFFFF",
+        background:"#FFFFFF",
         position:"fixed",
         right:"20px",
         top:"6px",
-        border:"1px solid #BBBBBB",
+        border:"1px solid #DDDDDD",
         borderRadius:"16px",
         textAlign:"center",
         width:"72px",
@@ -108,17 +110,38 @@ function AnchorApp(props) {
         lineHeight:"32px",
         zIndex:999,
     };
+
+    // app container css map
     const amap={
         height:((window.outerHeight-40)+'px'),
         width:(window.outerWidth+'px'),
         overFlow:"hidden",
         margin:"0 auto",
     };
+
+    //footer css map
     const fmap={
-        height:"40px",
+        height:"42px",
+        position:"fixed",
+        fontSize:"12px",
+        left:"0px",
+        background:"#FAFAFA",
+        top:((window.outerHeight-42)+'px'),
         wordWrap: "break-word",
-        paddingRight:"14px",
+        paddingRight:"30px",
+        paddingTop:"3px",
+        zIndex:999,
     };
+
+    //default header css
+    const hmap={
+        width:"100%",
+        height:"45px",
+        background:"#EEEEEE",
+        position:"fixed",
+        top:"0px",
+        left:"0px",
+    }
 
     return (
         <Row>
@@ -126,9 +149,11 @@ function AnchorApp(props) {
                 <span onClick={() => {self.history()}}>H</span> | 
                 <span onClick={() => {self.exitApp()}}> C</span>
             </div>
-            <Col lg={12} xs={12} id="app_container" style={amap}></Col>
-            <Col lg={12} xs={12} style={fmap}>
-                <p className='text-end'> cApp on {props.block} , owner : {owner}</p>
+            <div style={hmap} id="nav_con"></div>
+            <Col lg={12} xs={12} id="app_container" style={amap}>
+            </Col>
+            <Col lg={12} xs={12} style={fmap} id="footer_con">
+                <p> cApp on {props.block} , owner :<br />{props.owner}</p>
             </Col>
         </Row>
     );
