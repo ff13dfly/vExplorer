@@ -10,10 +10,12 @@ function NodeInput(props) {
 			setNode(ev.target.value);
 		},
 		saveNode:()=>{
-			//console.log(node);
-			props.save(node.trim());
+			let uri=node.trim();
+			
+			//check uri here;
+			props.save(uri);
 		},
-	}
+	};
 
 	return (
 		<Row className = "pt-4" >

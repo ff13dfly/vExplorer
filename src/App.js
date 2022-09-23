@@ -1,8 +1,6 @@
 import { Navbar, Container, Nav, Row, Col, Modal } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 
-import { WOW } from 'wowjs';
-
 import Account from './pages/account';
 import Setting from './pages/setting';
 import Anchor from './pages/anchor';
@@ -15,12 +13,12 @@ import ListSell from './common/listSell';
 import Error from './common/error';
 
 import RPC from './lib/rpc.js';
-
+import UI from './lib/ui.js';
 
 let start = {
     account: '',                     //使用的连接账号
-    //node:'ws://localhost:9944',     //连接的入口node
-    node: 'wss://network.metanchor.net',     //连接的入口node
+    node:'ws://localhost:9944',     //连接的入口node
+    //node: 'wss://network.metanchor.net',     //连接的入口node
     anchor: 'anchor',                //entry anchor
     gateway: false,                  //使用启用gateway
     server: '',                      //gateway的URI
@@ -30,60 +28,18 @@ const keys = {
     jsonFile: 'js_file_name',
     anchorList: 'anchor_list',
     startNode: 'start_node',
+    historyNode: 'history_node',
+};
+
+const keyMap={
+    start:'sss_ss',                 //start information
+    history:'bbbsss_aaaaa',         //input nodes history
+    signature:'dfadadfa',           //verify json file
 }
-let cur = 'home';
 
 function App(props) {
     let [content, setContent] = useState('');
     let [show, setShow] = useState(false);
-
-    const UI = {
-        map: {},
-        animates: {
-            out: "animate__backOutUp",
-            in: "animate__backOutDown",
-        },
-        regComponent: (name, cls) => {
-            UI.map[name] = cls;
-            return true;
-        },
-        autoHide: (name, way, hide) => {
-            var cls = UI.map[name];
-            var ani = UI.animates[way];
-            if (!cls || !ani) return false;
-
-            var wow = new WOW(
-                {
-                    boxClass: cls,
-                    animateClass: ani,
-                    offset: 100,
-                    callback: function (box) {
-                        //console.log(box);
-                        if (hide) box.style.display = "none";
-                    },
-                    scrollContainer: null
-                }
-            );
-            wow.init();
-            // setTimeout(function () {
-            //     wow.init();
-            // }, 500);
-        },
-        autoShow: (name,ani) => {
-            var cls = UI.map[name];
-            var elements = document.getElementsByClassName(cls);
-            if(!elements || elements.length<1) return false;
-            var box=elements[0];
-            box.style.display = "block";
-            
-        },
-        navHide: () => {
-            console.log("Nav hide");
-        },
-        navShow: () => {
-            console.log("Nav show");
-        },
-    }
 
     const self = {
         router: (ev) => {
@@ -351,16 +307,37 @@ function App(props) {
             start = {
                 account: '',                     //使用的连接账号
                 node: 'ws://localhost:9944',     //连接的入口node
+                //node:'wss://network.metanchor.net',
                 anchor: 'anchor',                //entry anchor
                 gateway: false,                  //使用启用gateway
                 server: '',                      //gateway的URI
             };
             self.forceStart();
         },
+        setHistory:(uri)=>{
+            const his=self.getHistory();
+            let is=false;
+            for(let i=0;i<his.length;i++){
+                if(his[i]===uri) is = true;
+            }
+            if(!is) his.push(uri);
+            localStorage.setItem(keys.historyNode, JSON.stringify(his));
+            return true;
+        },
+        getHistory:()=>{
+            const data = localStorage.getItem(keys.historyNode);
+            if(data===null) return [];
+            return JSON.parse(data);
+        },
+        cleanHistory:()=>{
+            localStorage.removeItem(keys.historyNode);
+        },
         handleClose: () => { setShow(false); },
         handleShow: () => { setShow(true); },
         save: (uri) => {
+            //1.switch to node uri
             start.node = uri;
+            self.setHistory(uri);
 
             //2.rest the RPC link
             self.initPage(start, (res) => {
@@ -369,8 +346,7 @@ function App(props) {
             self.handleClose();     //关闭弹窗
 
             //3.fresh page
-            cur = 'home';
-            self.render(cur);
+            self.render('home');
         },
         fresh: (obj) => {
             //1.combine start data
@@ -390,8 +366,7 @@ function App(props) {
             self.handleClose();     //关闭弹窗
 
             //3.fresh page
-            cur = 'home';
-            self.render(cur);
+            self.render('home');
         },
         clean: () => {
             self.cleanStart();
@@ -400,8 +375,7 @@ function App(props) {
                 if (res === false) setMarket(< Error data={'Failed to create websocket link to ' + start.node} />);
             });
             self.handleClose();     //关闭弹窗
-            cur = 'home';
-            self.render(cur);
+            self.render('home');
         },
         initPage: (entry, ck) => {
             //console.log('Started from App.js initPage : '+JSON.stringify(entry));
@@ -449,8 +423,6 @@ function App(props) {
         },
 
     }
-
-
 
     let [dom, setDom] = useState((< Search onCheck={self.check} UI={UI} />));
     let [result, setResult] = useState('');
