@@ -1,9 +1,10 @@
 import { Container,Row,Col } from 'react-bootstrap';
 
 function Docs(props) {
-	localStorage.setItem('hello','world');
-	const store=localStorage.getItem('hello');
-
+	//localStorage.setItem('hello','world');
+	//const store=localStorage.getItem('hello');
+	const store="hello";
+	
     return (
     <Container>	
 	    <Row  className = "pt-2">

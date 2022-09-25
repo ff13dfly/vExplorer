@@ -4,6 +4,7 @@ import { Row, Col,Button } from 'react-bootstrap';
 import { useState,useEffect } from 'react';
 
 //import { formatBalance } from '@polkadot/util';
+import STORAGE from '../lib/storage.js';
 
 function User(props) {
   let [amount,setAmount]=useState(0);
@@ -13,7 +14,8 @@ function User(props) {
 
     },
     remove:()=>{
-      localStorage.removeItem(props.storageKey);
+      //localStorage.removeItem(props.storageKey);
+      STORAGE.removeKey("signature");
       props.fresh();      //父组件传过来的
     },
     charge:()=>{
@@ -21,8 +23,9 @@ function User(props) {
     },
   }
 
-  const fa=localStorage.getItem(props.storageKey);
-  const account=JSON.parse(fa);
+  //const fa=localStorage.getItem(props.storageKey);
+  //const account=JSON.parse(fa);
+  const account=STORAGE.getKey("signature");
 
   const cls = {
     "wordWrap": "break-word",

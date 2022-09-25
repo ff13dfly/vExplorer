@@ -1,20 +1,16 @@
 
 import { Row, Col,Container,Form,Button } from 'react-bootstrap';
-
 import { Keyring } from '@polkadot/api';
-
 import { useState,useEffect } from 'react';
+
+import STORAGE from '../lib/storage.js';
 
 function Sign(props) {
 	let [password,setPassword]   =useState('');
 	let [extend,setExtend]   =useState('');
 	let [info,setInfo]=useState('');
 	
-	const k=props.accountKey;
-	const dt=localStorage.getItem(k);
-	const acc=JSON.parse(dt);
-	
-	//console.log(props);
+	const acc = STORAGE.getKey("signature");
 	
 	const self={
     	changePassword:(ev)=>{

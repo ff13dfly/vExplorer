@@ -14,6 +14,7 @@ import Error from './common/error';
 
 import RPC from './lib/rpc.js';
 import UI from './lib/ui.js';
+import STORAGE from './lib/storage.js';
 
 let start = {
     account: '',                     //使用的连接账号
@@ -24,18 +25,14 @@ let start = {
     server: '',                      //gateway的URI
 };
 
-const keys = {
-    jsonFile: 'js_file_name',
-    anchorList: 'anchor_list',
-    startNode: 'start_node',
-    historyNode: 'history_node',
-};
-
-const keyMap={
+STORAGE.setMap({
     start:'sss_ss',                 //start information
     history:'bbbsss_aaaaa',         //input nodes history
     signature:'dfadadfa',           //verify json file
-}
+    mine:'ljljlda',                 //my anchor list
+});
+
+UI.regComponent("Nav", "nav_con");
 
 function App(props) {
     let [content, setContent] = useState('');
@@ -68,7 +65,7 @@ function App(props) {
                     break;
 
                 case 'anchor':
-                    setMarket(''); setDom((< Anchor keys={keys}
+                    setMarket(''); setDom((< Anchor 
                         onCheck={self.isOwner}
                         onSell={self.sell}
                         onUpdate={self.update}
@@ -77,7 +74,7 @@ function App(props) {
 
                 case 'account':
                     setMarket('');
-                    setDom((< Account keys={keys}
+                    setDom((< Account 
                         onCheck={(name) => { self.check(name) }} balance={RPC.common.balance}
                     />));
                     break;
@@ -92,8 +89,7 @@ function App(props) {
         update: (anchor) => {
             self.isOwner(anchor, (res) => {
                 if (res === false) return false;
-                const k = keys.jsonFile;
-                setContent((< Sign accountKey={k}
+                setContent((< Sign
                     callback={
                         (pair, name, ext) => {
                             RPC.common.write(pair, name, ext, (res) => {
@@ -116,8 +112,7 @@ function App(props) {
         sell: (anchor) => {
             self.isOwner(anchor, (res) => {
                 if (res === false) return false;
-                const k = keys.jsonFile;
-                setContent((< Sign accountKey={k}
+                setContent((< Sign
                     callback={
                         (pair, name, ext) => {
                             RPC.common.sell(pair, name, ext.sell, (res) => {
@@ -159,12 +154,11 @@ function App(props) {
             });
         },
         doBuy: (anchor, ck) => {
-            const k = keys.jsonFile;
-            if (localStorage.getItem(k) == null) {
+            if (STORAGE.getKey("signature")===null){
                 return ck && ck(false);
             } else {
                 setContent(
-                    (< Sign accountKey={k}
+                    (< Sign 
                         callback={
                             (pair, name) => {
                                 RPC.common.buy(pair, name, (res) => {
@@ -180,12 +174,11 @@ function App(props) {
             }
         },
         doInit: (anchor, ck) => {
-            const k = keys.jsonFile;
-            if (localStorage.getItem(k) == null) {
+            if (STORAGE.getKey("signature")===null){
                 return ck && ck(false);
             } else {
                 setContent(
-                    (< Sign accountKey={k}
+                    (< Sign
                         callback={
                             (pair, name) => {
                                 const raw = "This anchor is buy from vExplorer.";
@@ -269,75 +262,26 @@ function App(props) {
             });
         },
         getAddress: () => {
-            const str = localStorage.getItem(keys.jsonFile);
-            const acc = str === null ? false : JSON.parse(str);
-            return acc === false ? false : acc.address;
+            const acc=STORAGE.getKey("signature");
+            if(acc===null || !acc.address) return false;
+            return acc.address;
         },
         cleanDom: () => {
             setResult('');
             setOnsell('');
         },
         getStart: () => {
-            const data = localStorage.getItem(keys.startNode);
-            if (data !== null) {
-                start = JSON.parse(data);
-                return start;
-            }
-            localStorage.setItem(keys.startNode, JSON.stringify(start));
+            const data=STORAGE.getKey("start");
+            if(data!==null) start = data;
+            else STORAGE.setKey("start",start);
             return start;
-        },
-        setStart: (key, val) => {
-            let isValid = false;
-            for (var k in start) {
-                if (k === key) {
-                    start[k] = val;
-                    isValid = true;
-                }
-            }
-            if (!isValid) return false;
-            localStorage.setItem(keys.startNode, JSON.stringify(start));
-        },
-        forceStart: () => {
-            localStorage.setItem(keys.startNode, JSON.stringify(start));
-        },
-        cleanStart: () => {
-            localStorage.removeItem(keys.startNode);
-        },
-        initStart: () => {
-            start = {
-                account: '',                     //使用的连接账号
-                node: 'ws://localhost:9944',     //连接的入口node
-                //node:'wss://network.metanchor.net',
-                anchor: 'anchor',                //entry anchor
-                gateway: false,                  //使用启用gateway
-                server: '',                      //gateway的URI
-            };
-            self.forceStart();
-        },
-        setHistory:(uri)=>{
-            const his=self.getHistory();
-            let is=false;
-            for(let i=0;i<his.length;i++){
-                if(his[i]===uri) is = true;
-            }
-            if(!is) his.push(uri);
-            localStorage.setItem(keys.historyNode, JSON.stringify(his));
-            return true;
-        },
-        getHistory:()=>{
-            const data = localStorage.getItem(keys.historyNode);
-            if(data===null) return [];
-            return JSON.parse(data);
-        },
-        cleanHistory:()=>{
-            localStorage.removeItem(keys.historyNode);
         },
         handleClose: () => { setShow(false); },
         handleShow: () => { setShow(true); },
         save: (uri) => {
             //1.switch to node uri
             start.node = uri;
-            self.setHistory(uri);
+            STORAGE.footQueue("history",uri);
 
             //2.rest the RPC link
             self.initPage(start, (res) => {
@@ -357,7 +301,7 @@ function App(props) {
                     start[k] = obj[k];
                 }
             }
-            if (isChanged) self.forceStart();
+            if (isChanged) STORAGE.setKey("start",start);
 
             //2.rest the RPC link
             self.initPage(start, (res) => {
@@ -369,8 +313,9 @@ function App(props) {
             self.render('home');
         },
         clean: () => {
-            self.cleanStart();
-            self.initStart();
+            start = STORAGE.getPersist('start',start);
+            STORAGE.setKey("start",start);
+
             self.initPage(start, (res) => {
                 if (res === false) setMarket(< Error data={'Failed to create websocket link to ' + start.node} />);
             });
@@ -384,8 +329,8 @@ function App(props) {
                 if (res === false) return ck && ck(false);
                 if (res.error) {
                     setMarket(< Error data={'No entry anchor.'} />);
-                    self.initStart();
-                    //return self.initPage(self.getStart(),ck);
+                    STORAGE.setPersist('start',start);
+                    STORAGE.setKey("start",start);
                     setTimeout(() => {
                         self.showMarket(ck);
                     }, 1000);
@@ -401,13 +346,11 @@ function App(props) {
             ck && ck(true);
         },
         verify: (ck) => {
-            const k = keys.jsonFile;
-            console.log('hello, I am running...' + k);
-            if (localStorage.getItem(k) == null) {
+            if (STORAGE.getKey("signature")===null){
                 return ck && ck(false);
             } else {
                 setContent(
-                    (< Sign accountKey={k}
+                    (< Sign
                         callback={
                             (pair) => {
                                 console.log(pair);
@@ -509,18 +452,19 @@ function App(props) {
         },
     };
 
-    UI.regComponent("Nav", "nav_con");
 
+    
     useEffect(() => {
         //1.start tab init
         start = self.getStart();
         if (!start.account) {
             start.account = self.getAddress();
-            self.forceStart();
+            STORAGE.setKey("start",start);
         }
 
         self.initPage(start, (res) => {
             test.auto();
+
             //2.1.PRC verify function set
             RPC.setExtra('verify', self.verify);
 

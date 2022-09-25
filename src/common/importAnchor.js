@@ -2,6 +2,7 @@
 import { Row, Col,Button,Container,Form } from 'react-bootstrap';
 
 import { useState } from 'react';
+import STORAGE from '../lib/storage.js';
 
 function ImportAnchor(props) {
   const self={
@@ -11,20 +12,19 @@ function ImportAnchor(props) {
     add:()=>{
       props.onCheck(anchor,(res)=>{
         if(res===false) return setInfo('Load failed.');
-        const skey=props.storageKey;
-        const list=self.getList(skey);
+        const list=self.getList();
         list[anchor]=res;
-        self.saveList(skey,list);
+        STORAGE.setKey("mine",list);
         props.fresh();
       });
     },
     saveList:(k,v)=>{
       localStorage.setItem(k,JSON.stringify(v));
     },
-    getList:(k)=>{
-      const str=localStorage.getItem(k);
-      if(str == null) return {};
-      return JSON.parse(str);
+    getList:()=>{
+      const list=STORAGE.getKey("mine");
+			if (list === null) return {};
+			return list;
     }
   }
 

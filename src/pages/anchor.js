@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import ImportAnchor from '../common/importAnchor';
 import Block from '../common/block';
+import STORAGE from '../lib/storage.js';
 
 function Anchor(props) {
 	let queue = [];
@@ -19,17 +20,16 @@ function Anchor(props) {
 			setDom(dt);
 		},
 		structPage: () => {
-			const skey = props.keys.anchorList;
-			cache = self.getList(skey);
+			cache = self.getList();
 			queue = [];
 			for (var k in cache) {
 				queue.push(k);
 			}
 		},
 		getList: (k) => {
-			const str = localStorage.getItem(k);
-			if (str == null) return {};
-			return JSON.parse(str);
+			const list=STORAGE.getKey("mine");
+			if (list === null) return {};
+			return list;
 		},
 
 		listAnchors: (page, count) => {
@@ -62,12 +62,10 @@ function Anchor(props) {
 	let [page, setPage] = useState(1);
 	let [dom, setDom] = useState(self.listAnchors(page, count));
 
-
-
 	return (
 		<Container>
 			<Row>
-				<ImportAnchor onCheck={props.onCheck} fresh={self.fresh} storageKey={props.keys.anchorList} />
+				<ImportAnchor onCheck={props.onCheck} fresh={self.fresh} />
 			</Row>
 			<Row className="pt-2">{dom}</Row>
 		</Container>

@@ -5,8 +5,10 @@ import Importer from '../common/importer';
 import AccountAdd from '../common/accountAdd';
 import User from '../common/user';
 
+import STORAGE from '../lib/storage.js';
+
 function Account(props) {
-	const k=props.keys.jsonFile;
+	const acc=STORAGE.getKey("signature");
 
 	const self={
 		init:()=>{
@@ -17,13 +19,13 @@ function Account(props) {
 			setAdd(self.getAdd());
 		},
 		getComponent:()=>{
-			return localStorage.getItem(k)==null?
-			(<Importer storageKey={k} fresh={self.fresh}/>):
-			(<User storageKey={k} fresh={self.fresh} balance={props.balance}/>);
+			return acc===null?
+			(<Importer fresh={self.fresh}/>):
+			(<User fresh={self.fresh} balance={props.balance}/>);
 		},
 		getAdd:()=>{
-			return localStorage.getItem(k)==null?
-			(<AccountAdd storageKey={k} fresh={self.fresh}/>):
+			return acc===null?
+			(<AccountAdd fresh={self.fresh}/>):
 			'';
 		},
 	}

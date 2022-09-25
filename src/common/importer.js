@@ -4,6 +4,7 @@ import { Row, Col, Button, Form } from 'react-bootstrap';
 import { useState } from 'react';
 
 import { Keyring } from '@polkadot/api';
+import STORAGE from '../lib/storage.js';
 
 function Importer(props){
     const self={
@@ -29,7 +30,6 @@ function Importer(props){
         const keyring = new Keyring({ type: 'sr25519' });
         const sign=JSON.parse(file);
         const pair = keyring.createFromJson(sign);
-        //const encry=sign.encoding.content[0];
 
         try {
             pair.decodePkcs8(password);
@@ -43,7 +43,7 @@ function Importer(props){
 
       },
       setSignJSON:(fa)=>{
-        localStorage.setItem(props.storageKey,JSON.stringify(fa));
+        STORAGE.setKey("signature",fa);
       }
     }
     
