@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
-import { Row, Col, Button } from 'react-bootstrap';
+import { Row, Col } from 'react-bootstrap';
 
-import tools from '../lib/tools.js';
 import RPC from '../lib/rpc.js';
 import Loader from '../lib/loader.js';
 
@@ -35,10 +34,16 @@ function AnchorApp(props) {
             if (code.css) self.loadCSS(code.css);
 
             setTimeout(()=>{
-                const cApp = new Function("agent", "con", "error", props.raw);
+                let raw='';
+                if(props.raw.substr(0, 2).toLowerCase()==='0x'){
+                    raw=decodeURIComponent(props.raw.slice(2).replace(/\s+/g, '').replace(/[0-9a-f]{2}/g, '%$&'));
+                }else{
+                    raw=props.raw;
+                }
+                const cApp = new Function("agent", "con", "error", raw);
                 if (!cApp) return false;
                 cApp(RPC, 'app_container', code.failed ? code.failed : null);
-            },500);
+            },0);
         },
         autoUI:(ck)=>{
             props.UI.autoHide("Search","out",true);
