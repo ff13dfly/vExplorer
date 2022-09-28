@@ -3,14 +3,6 @@ const tools = {
 		if (n === undefined) n = 10;
 		return address.substr(0, n) + '...' + address.substr(address.length - n, n);
 	},
-	u8toString: (arr) => {
-		let str = '0x';
-		for (let i = 0; i < arr.length; i++) {
-			if (arr[i] < 16) str += '0';
-			str += arr[i].toString(16);
-		}
-		return str;
-	},
 	hex2str: (hex) => {
 		//can not solve utf8
 		if (!hex) return false;
@@ -35,10 +27,16 @@ const tools = {
 		}));
 		return typedArray.buffer;
 	},
+	u8toString: (arr) => {
+		let str = '0x';
+		for (let i = 0; i < arr.length; i++) {
+			if (arr[i] < 16) str += '0';
+			str += arr[i].toString(16);
+		}
+		return str;
+	},
 	strToU8:(str)=>{
-
 		const code = encodeURIComponent(str);
-		console.log(code);
 		const bytes = [];
 		for (var i = 0; i < code.length; i++) {
 			const c = code.charAt(i);
@@ -49,20 +47,15 @@ const tools = {
 				i += 2;
 			} else bytes.push(c.charCodeAt(0));
 		}
+		//console.log(bytes);
 		return bytes;
-		// var result = '';
-		// if(window.TextEncoder){
-		// 	var encoder = new TextEncoder('utf8');
-		// 	var bytes = encoder.encode(str);
-		// 	for(var i = 0; i < bytes.length;i++) {
-		// 		console.log(bytes[i]);
-		// 		result += String.fromCharCode(bytes[i]);
-		// 	}
-		// }else{
-		// 	result=eval('\''+encodeURI(str).replace(/%/gm, '\\x')+'\'');
-		// }
-		// return result;
-	}
+	},
+	encodeUTF8:(str) => {
+		return str;
+	},
+	decodeUTF8:(str) => {
+		return decodeURIComponent(str.slice(2).replace(/\s+/g, '').replace(/[0-9a-f]{2}/g, '%$&'));
+	},
 };
 
 export default tools;

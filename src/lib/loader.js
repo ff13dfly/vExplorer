@@ -1,7 +1,3 @@
-//import tools from './tools.js';
-
-//autoload JS and CSS from anchor network
-
 let search=null;
 let viewer=null;
 

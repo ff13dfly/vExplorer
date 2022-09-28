@@ -1,3 +1,5 @@
+import tools from './tools.js';
+
 let wsAPI = null;
 let account='';
 let unlistening=null;	//listening的回调；
@@ -40,6 +42,10 @@ const self = {
 	},
 	view:(block, anchor, owner, ck) => {
 		anchor=anchor.toLocaleLowerCase();
+		if(anchor.substr(0, 2).toLowerCase()==='0x'){
+			anchor=tools.decodeUTF8(anchor);
+		}
+
 		if(wsAPI===null) return ck && ck(false);
 		wsAPI.rpc.chain.getBlockHash(block, (res) => {
 			const hash = res.toHex();
@@ -51,11 +57,20 @@ const self = {
 				let raw=null;
 				for (let i = 0; i < exs.length; i++) {
 					const data = exs[i].args;
-					if(data.key.toLocaleLowerCase()!== anchor) continue;
+					if(data.key.substr(0, 2).toLowerCase()==='0x'){
+						if(tools.decodeUTF8(data.key)!==anchor) continue;
+					}else{
+						if(data.key.toLocaleLowerCase()!== anchor) continue;
+					}
+
+					if(data.raw.substr(0, 2).toLowerCase()==='0x'){
+						data.raw=tools.decodeUTF8(data.raw);
+					}
+					
 					if(data.protocol) data.protocol=JSON.parse(data.protocol);
 					if(data.protocol.type === "data" && data.protocol.format === "JSON") data.raw=JSON.parse(data.raw);
-					//hex2str
 					
+					//console.log(data);
 					result.raw=data;
 				}
 				ck && ck(result);
@@ -105,6 +120,11 @@ const self = {
                     const data = exs[i].args;
                     if(data.key.toLocaleLowerCase()!== anchor)
                     if(data.protocol) data.protocol=JSON.parse(data.protocol);
+					
+					if(data.raw.substr(0, 2).toLowerCase()==='0x'){
+						data.raw=tools.decodeUTF8(data.raw);
+					}
+
 					if(data.protocol.format==='JSON') data.raw=JSON.parse(data.raw);
                     raw= data;
                 }
@@ -173,7 +193,6 @@ const self = {
         }
     },
 	write:(pair,anchor,raw,protocol,ck)=>{
-		anchor=anchor.toLocaleLowerCase();
 		if(wsAPI===null) return ck && ck(false);
 		if(typeof protocol !== 'string') protocol=JSON.stringify(protocol);
 		if(typeof raw !== 'string') raw=JSON.stringify(raw);
@@ -246,6 +265,15 @@ const self = {
 				for (let i = 0; i < exs.length; i++) {
 					const data = exs[i].args;
 					if(data.protocol) data.protocol=JSON.parse(data.protocol);
+
+					if(data.raw.substr(0, 2).toLowerCase()==='0x'){
+						data.raw=tools.decodeUTF8(data.raw);
+					}
+
+					if(data.key.substr(0, 2).toLowerCase()==='0x'){
+						data.key=tools.decodeUTF8(data.key);
+					}
+
 					if(data.protocol.type === "data" && data.protocol.format === "JSON") data.raw=JSON.parse(data.raw);
 					data.block=parseInt(lastHeader.number.toHuman().replace(/,/gi, ''));
 					data.account=exs[i].owner;
