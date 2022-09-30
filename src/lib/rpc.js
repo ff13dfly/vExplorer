@@ -84,7 +84,6 @@ const self={
 		RPC.start=start;
 
 		//2.整理基础方法
-		//RPC.common={};
 		RPC.common=self.copy(Direct.common);
 		RPC.extra={};
 		//console.log(JSON.stringify(start));

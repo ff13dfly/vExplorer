@@ -440,9 +440,8 @@ function App(props) {
             });
         },
         auto: () => {
-            test.multi();
+            //test.multi();
             //test.decode();
-            //console.log(RPC);
             //test.history();
             //test.search();
             //test.view();

@@ -318,6 +318,7 @@ const self = {
 				const exs = self.filter(dt, 'setAnchor');
 				const list = [];
 				for (let i = 0; i < exs.length; i++) {
+					const result = { owner: null, block:0, name:null,cost:0,target:null,data: {}, empty: true };
 					const data = exs[i].args;
 					if (data.protocol) data.protocol = JSON.parse(data.protocol);
 
@@ -330,11 +331,11 @@ const self = {
 					}
 
 					if (data.protocol.type === "data" && data.protocol.format === "JSON") data.raw = JSON.parse(data.raw);
-					data.block = parseInt(lastHeader.number.toHuman().replace(/,/gi, ''));
-					data.account = exs[i].owner;
-					data.anchor = data.key;
-					delete data.key;
-					list.push(data);
+					result.block = parseInt(lastHeader.number.toHuman().replace(/,/gi, ''));
+					result.owner = exs[i].owner;
+					result.name = data.key;
+					result.data= data;
+					list.push(result);
 				}
 				ck && ck(list);
 			});
