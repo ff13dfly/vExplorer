@@ -142,21 +142,7 @@ function AnchorApp(props) {
         });
     });
 
-    //float operation button container
-    const cmap={
-        color: "red",
-        background:"#FFFFFF",
-        position:"fixed",
-        right:"20px",
-        top:"6px",
-        border:"1px solid #DDDDDD",
-        borderRadius:"16px",
-        textAlign:"center",
-        width:"72px",
-        height:"32px",
-        lineHeight:"32px",
-        zIndex:999,
-    };
+
 
     // app container css map
     const amap={
@@ -203,11 +189,62 @@ function AnchorApp(props) {
         zIndex:1999,
     };
 
+    const ihmap={
+        width:"24px",
+        height:"24px",
+        margin:"0 auto",
+        padding:"0px 0px 0px 0px",
+        marginBottom:"6px",
+        marginRight:"9px",
+        opacity:0.4,
+    }
+    const icmap={
+        width:"24px",
+        height:"24px",
+        margin:"0 auto",
+        padding:"0px 0px 0px 0px",
+        marginBottom:"6px",
+        marginLeft:"9px",
+        opacity:0.4,
+    }
+
+    const dvmap={
+        color:"#EEEEEE",
+        fontSize:"24px",
+        lineHeight:"24px",
+        height:"24px",
+        width:"auto",
+        margin:"-10px 0px 10px 0px",
+        padding:"0px 0px 0px 0px",
+    }
+
+    //float operation button container
+    const cmap={
+        background:"#FFFFFF",
+        position:"fixed",
+        right:"20px",
+        top:"6px",
+        padding:"0px 5px 0px 9px",
+        margin:"0 auto",
+        border:"1px solid #DDDDDD",
+        borderRadius:"16px",
+        textAlign:"center",
+        width:"88px",
+        height:"32px",
+        lineHeight:"32px",
+        zIndex:999,
+    };
+
     return (
         <Row>
             <div style={cmap} id={config.exit}>
-                <span onClick={() => {self.history()}}>H</span> | 
-                <span onClick={() => {self.exitApp()}}> C</span>
+                <span onClick={() => {self.history()}}>
+                    <img style={ihmap} src="chart.png" />
+                </span>
+                <span style={dvmap}>|</span>
+                <span onClick={() => {self.exitApp()}}>
+                    <img style={icmap} src="circle.png" />
+                </span>
             </div>
             <div style={hmap} id={config.nav}></div>
             <Col lg={12} xs={12} id={config.app} style={amap}>
