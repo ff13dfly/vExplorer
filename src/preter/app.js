@@ -130,7 +130,7 @@ function AnchorApp(props) {
                 if (props.protocol && props.protocol.lib) {
                     Loader(
                         props.protocol.lib,
-                        { viewer: RPC.common.view, search: RPC.common.search },
+                        {search: RPC.common.search },
                         (code) => {
                             self.autoLoad(code);
                         }

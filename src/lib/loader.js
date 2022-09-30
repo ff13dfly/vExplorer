@@ -1,6 +1,4 @@
 let search=null;
-let viewer=null;
-
 const self={
     getLibs:(list,ck,cache,order)=>{
         //console.log(`Start:${JSON.stringify(list)}`);
@@ -43,10 +41,10 @@ const self={
         search(anchor, (res)=>{
             if(!res || (!res.owner)) return ck && ck(anchor,'');
             if(!res.empty) return ck && ck(anchor,res.data);
-            viewer(anchor,block===0?res.block:block,res.owner,(rs)=>{
-                console.log(rs);
-                ck && ck(anchor,rs.data);
-            });
+            // viewer(anchor,block===0?res.block:block,res.owner,(rs)=>{
+            //     console.log(rs);
+            //     ck && ck(anchor,rs.data);
+            // });
         });
     },
     decodeLib:(dt)=>{
@@ -255,7 +253,7 @@ const self={
 
 const Loader =(list,RPC,ck)=>{
     //console.log(`Load list : ${JSON.stringify(list)}`);
-    viewer=RPC.viewer;
+    //viewer=RPC.viewer;
     search=RPC.search;
     self.getLibs(list,(dt,order)=>{                
         const code=self.regroupCode(dt,order);

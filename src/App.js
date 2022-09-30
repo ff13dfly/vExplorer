@@ -207,7 +207,7 @@ function App(props) {
                 return false;
             }
             setMarket('');
-            RPC.common.latest(anchor,self.optResult);
+            RPC.common.search(anchor,self.optResult);
         },
         optResult: (dt) => {
             if (dt === false) return setResult(< Error data='No data to show.' />);
@@ -451,8 +451,6 @@ function App(props) {
         },
     };
 
-
-    
     useEffect(() => {
         //1.start tab init
         start = self.getStart();

@@ -48,7 +48,7 @@ function Block(props) {
     (<Col lg = { 12 } xs = { 12 } key={dt.anchor} className="pt-2">
     	<Row  className = "pt-2">
 			<Col lg = { 6 } xs = { 6 }><h3>{dt.anchor}</h3></Col>
-			<Col lg = { 6 } xs = { 6 } className="text-end" style={cls_b}>{dt.block}</Col>
+			<Col lg = { 6 } xs = { 6 } className="text-end" style={cls_b}>{dt.blocknumber}</Col>
 
 			<Col lg = { 12 } xs = { 12 }><p style={cls}>owner:{shorten(dt.owner,12)}</p></Col>
       <Col lg = { 3 } xs = { 3 }>

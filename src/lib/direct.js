@@ -1,5 +1,3 @@
-import tools from './tools.js';
-
 let wsAPI = null;
 let account = '';
 let unlistening = null;	//listening的回调；
@@ -17,6 +15,7 @@ const self = {
 	
 	latest: (anchor, ck) => {
 		anchor = anchor.toLocaleLowerCase();
+		let unsub=null;
 		wsAPI.query.anchor.anchorOwner(anchor, (res) =>{
 			const result = { owner: null, block: 0, name: null,cost:0,target:null, data: {}, empty: true };
 			if (res.isEmpty){
@@ -25,7 +24,10 @@ const self = {
 			} 
 			const owner = res.value[0].toHuman();
 			const block = res.value[1].words[0];
+			unsub();
 			self.target(anchor,block,ck,owner);
+		}).then((un) => {
+			unsub = un;
 		});
 	},
 	view: (anchor,block,owner,ck)=>{
@@ -35,7 +37,7 @@ const self = {
 		//console.log(`[function Target]: ${anchor} on ${block}, owner:${owner}`);
 		anchor = anchor.toLocaleLowerCase();
 		if (anchor.substr(0, 2).toLowerCase() === '0x') {
-			anchor = tools.decodeUTF8(anchor);
+			anchor = self.decodeUTF8(anchor);
 		}
 		const result = { owner: owner, block:block, name: anchor,cost:0,target:null,data: {}, empty: true };
 		if(owner===null || owner===undefined){
@@ -56,13 +58,13 @@ const self = {
 				for (let i = 0; i < exs.length; i++) {
 					const data = exs[i].args;
 					if (data.key.substr(0, 2).toLowerCase() === '0x') {
-						if (tools.decodeUTF8(data.key) !== anchor) continue;
+						if (self.decodeUTF8(data.key) !== anchor) continue;
 					} else {
 						if (data.key.toLocaleLowerCase() !== anchor) continue;
 					}
 
 					if (data.raw.substr(0, 2).toLowerCase() === '0x') {
-						data.raw = tools.decodeUTF8(data.raw);
+						data.raw = self.decodeUTF8(data.raw);
 					}
 
 					if (data.protocol) data.protocol = JSON.parse(data.protocol);
@@ -82,34 +84,6 @@ const self = {
 					unlist = uu;
 				});
 			});
-		});
-	},
-	search: (anchor, ck) => {
-		anchor = anchor.toLocaleLowerCase();
-		if (wsAPI === null) return ck && ck(false);
-		let unsub = null;
-		let unlist = null;
-		const result = { owner: null, block: 0, name: anchor, cost:0,target:null,data: {}, empty: true };
-		wsAPI.query.anchor.anchorOwner(anchor, (res) => {
-			if (res.isEmpty) {
-				ck && ck(result);
-			} else {
-				const data = res.toHuman();
-				result.block=res.value[1].words[0];
-				result.owner=data[0];
-				wsAPI.query.anchor.sellList(anchor, (dt) => {
-					unlist();
-					if (dt.value.isEmpty) return ck && ck(result);
-					result.cost = dt.value[1].words[0];
-					result.target=dt.value[2].words[0];		//selling target 
-					ck && ck(result);
-				}).then((uu) => {
-					unlist = uu;
-				});
-			}
-			unsub();
-		}).then((un) => {
-			unsub = un;
 		});
 	},
 	filter: (exs, method) => {
@@ -197,7 +171,7 @@ const self = {
 						if (data.protocol) data.protocol = JSON.parse(data.protocol);
 
 					if (data.raw.substr(0, 2).toLowerCase() === '0x') {
-						data.raw = tools.decodeUTF8(data.raw);
+						data.raw = self.decodeUTF8(data.raw);
 					}
 
 					if (data.protocol.format === 'JSON') data.raw = JSON.parse(data.raw);
@@ -267,6 +241,9 @@ const self = {
 			action: 'unsell',
 		}
 	},
+	decodeUTF8:(str) => {
+		return decodeURIComponent(str.slice(2).replace(/\s+/g, '').replace(/[0-9a-f]{2}/g, '%$&'));
+	},
 	write: (pair, anchor, raw, protocol, ck) => {
 		if (wsAPI === null) return ck && ck(false);
 		if (typeof protocol !== 'string') protocol = JSON.stringify(protocol);
@@ -285,6 +262,13 @@ const self = {
 		anchor = anchor.toLocaleLowerCase();
 		if (wsAPI === null) return ck && ck(false);
 		wsAPI.tx.anchor.sellAnchor(anchor, cost).signAndSend(pair, (res) => {
+			ck && ck(res);
+		});
+	},
+	unsell:(pair, anchor, ck) => {
+		anchor = anchor.toLocaleLowerCase();
+		if (wsAPI === null) return ck && ck(false);
+		wsAPI.tx.anchor.unsellAnchor(anchor).signAndSend(pair, (res) => {
 			ck && ck(res);
 		});
 	},
@@ -338,11 +322,11 @@ const self = {
 					if (data.protocol) data.protocol = JSON.parse(data.protocol);
 
 					if (data.raw.substr(0, 2).toLowerCase() === '0x') {
-						data.raw = tools.decodeUTF8(data.raw);
+						data.raw = self.decodeUTF8(data.raw);
 					}
 
 					if (data.key.substr(0, 2).toLowerCase() === '0x') {
-						data.key = tools.decodeUTF8(data.key);
+						data.key = self.decodeUTF8(data.key);
 					}
 
 					if (data.protocol.type === "data" && data.protocol.format === "JSON") data.raw = JSON.parse(data.raw);
@@ -374,14 +358,14 @@ const Direct = {
 	},
 	common: {
 		balance: self.balance,
-		search: self.search,
+		search: self.latest,
 		view: self.view,
 		multi: self.multi,
-		latest:self.latest,
 		target:self.target,
 		history: self.history,
 		write: self.write,
 		sell: self.sell,
+		unsell:self.unsell,
 		buy: self.buy,
 		market: self.market,
 		subscribe: self.listening,
