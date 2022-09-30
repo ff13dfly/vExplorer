@@ -207,47 +207,30 @@ function App(props) {
                 return false;
             }
             setMarket('');
-            RPC.common.search(anchor, self.optResult);
+            RPC.common.latest(anchor,self.optResult);
         },
         optResult: (dt) => {
             if (dt === false) return setResult(< Error data='No data to show.' />);
-            if (dt.owner === 0) {
-                setResult(< Buy anchor={dt.anchor}
+            if(dt.owner===null && dt.block===0){
+                setResult(< Buy anchor={dt.name}
                     buy={self.doInit}
                 />);
                 setOnsell('');
-            } else {
-                if (dt.raw) {
-                    if (!dt.raw.protocol) {
-                        setResult(< Error data='No data to show.' />);
-                    } else {
-                        setResult(< Detail anchor={dt.anchor}
-                            raw={dt.raw.raw}
-                            protocol={dt.raw.protocol}
-                            owner={dt.owner}
-                            block={dt.block}
-                            UI={UI}
-                        />);
-                    }
-                } else {
-                    const name = dt.anchor;
-                    const owner = dt.owner;
-                    const block = dt.blocknumber;
-                    RPC.common.view(block, name, owner, (res) => {
-                        if (!res || !res.raw.protocol) {
-                            setResult(< Error data='No data to show.' />);
-                        } else {
-                            setResult(< Detail anchor={name}
-                                raw={res.raw.raw}
-                                protocol={res.raw.protocol}
-                                owner={dt.owner}
-                                block={block}
-                                UI={UI}
-                            />);
-                        }
-                    });
-                }
+                return true;
             }
+
+            if(dt.empty || !dt.data.protocol){
+                setResult(< Error data='No data to show.' />);
+                return true;
+            }
+
+            setResult(< Detail anchor={dt.name}
+                raw={dt.data.raw}
+                protocol={dt.data.protocol}
+                owner={dt.owner}
+                block={dt.block}
+                UI={UI}
+            />);
         },
         isSelling: (anchor, ck) => {
             RPC.common.search(anchor, (dt) => {
@@ -353,7 +336,6 @@ function App(props) {
                     (< Sign
                         callback={
                             (pair) => {
-                                console.log(pair);
                                 self.handleClose();
                                 ck && ck(pair);
                             }
@@ -441,7 +423,16 @@ function App(props) {
                 console.log(res);
             })
         },
+        multi:()=>{
+            //console.log("test multi anchor");
+            const ans=["fNews","test","中文",["dddd",115],"hello"];
+            console.log(ans);
+            RPC.common.multi(ans,(list)=>{
+                console.log(list);
+            });
+        },
         auto: () => {
+            test.multi();
             //test.decode();
             //console.log(RPC);
             //test.history();

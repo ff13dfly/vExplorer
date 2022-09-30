@@ -30,10 +30,10 @@ const self={
 	},
 	search: (anchor, ck) => {
 		anchor=anchor.toLocaleLowerCase();
-		self.link((success) => {
+		self.link((success) =>{
 			if(!success) return ck && ck(false);
 			wsAPI.query.anchor.anchorOwner(anchor, (res) => {
-				let result = { owner: null, blocknumber: 0, name: anchor,raw:{},empty:true};
+				let result = { owner: null, block: 0, name: anchor,data:{},empty:true};
 				if (res.isEmpty) return ck && ck(result);
 
 				result.owner =res.value[0].toHuman();
@@ -45,7 +45,6 @@ const self={
 					wsAPI.rpc.chain.getBlock(hash).then((dt) => {                      
 						if (dt.block.extrinsics.length === 1) return ck && ck(result);
 						const exs = self.filter(dt,'setAnchor');
-						let raw=null;
 						for (let i = 0; i < exs.length; i++) {
 							const data = exs[i].args;
 							if(data.key!== anchor) continue;

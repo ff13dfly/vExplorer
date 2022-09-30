@@ -4,10 +4,46 @@ import { Row, Col } from 'react-bootstrap';
 import RPC from '../lib/rpc.js';
 import Loader from '../lib/loader.js';
 
+const hash=function(n) { return Math.random().toString(36).substr(n != undefined ? n : 6) };
+
 function AnchorApp(props) {
-    //let [show, setShow] = useState({"display":"block"});
+    const pre='app_';
+    const config={
+        "dialog":pre+hash(),
+        "app":pre+hash(),
+        "exit":pre+hash(),
+        "nav":pre+hash(),
+        "foot":pre+hash(),
+    };
+    let dialog=false;
 
     const self = {
+        history:()=>{
+            if(!dialog){
+                self.showDialog();
+                const load=`<div class="col-12 gy-2 text-center">
+                    <h2>Loading cApp history...</h2>
+                </div>`;
+                document.getElementById(config.dialog).innerHTML=load;
+                const anchor=props.anchor;
+                RPC.common.history(anchor,(list)=>{
+                    self.decodeHistory(list);
+                });
+            }else{
+                self.hideDialog();
+            }
+        },
+        decodeHistory:(list)=>{
+            let txt='';
+            for(let i=0;i<list.length;i++){
+                const row=list[i];
+                const proto=JSON.parse(row.data.protocol);
+                txt+=`<div class="col-12">cApp size : ${row.data.raw.length} , version ${proto.ver} , on block : ${row.block}</div>`;
+            }
+
+            const dom= `<div class="row">${txt}</div>`;
+            document.getElementById(config.dialog).innerHTML=dom;
+        },
         loadJS: (code) => {
             const scp = document.createElement('script');
             scp.type = 'text/javascript';
@@ -42,7 +78,7 @@ function AnchorApp(props) {
                 }
                 const cApp = new Function("agent", "con", "error", raw);
                 if (!cApp) return false;
-                cApp(RPC, 'app_container', code.failed ? code.failed : null);
+                cApp(RPC, config.app, code.failed ? code.failed : null);
             },0);
         },
         autoUI:(ck)=>{
@@ -51,30 +87,36 @@ function AnchorApp(props) {
             self.showFun();
             ck && ck();
         },
-        history:()=>{
-            console.log("History list");
-        },
         exitApp:(ck)=>{
             //console.log("Exit cApp");
             props.UI.autoShow("Search","out");
             props.UI.autoShow("Nav","out");
+            self.hideDialog();
             self.hideFuns();
             self.cleanApp();
             ck && ck();
         },
         cleanApp:()=>{
-            document.getElementById('app_container').innerHTML="";
+            document.getElementById(config.app).innerHTML="";
             //document.getElementById('footer_con').innerHTML='';     
         },
+        showDialog:()=>{
+            dialog=true;
+            document.getElementById(config.dialog).style.display="block";
+        },
+        hideDialog:()=>{
+            dialog=false;
+            document.getElementById(config.dialog).style.display="none";
+        },
         showFun:()=>{
-            document.getElementById('exit_con').style.display="block";
-            document.getElementById('nav_con').style.display="block";
-            document.getElementById('footer_con').style.display="block";
+            document.getElementById(config.exit).style.display="block";
+            document.getElementById(config.nav).style.display="block";
+            document.getElementById(config.foot).style.display="block";
         },
         hideFuns:()=>{
-            document.getElementById('exit_con').style.display="none";
-            document.getElementById('nav_con').style.display="none";
-            document.getElementById('footer_con').style.display="none";
+            document.getElementById(config.exit).style.display="none";
+            document.getElementById(config.nav).style.display="none";
+            document.getElementById(config.foot).style.display="none";
         },
     };
 
@@ -146,18 +188,32 @@ function AnchorApp(props) {
         position:"fixed",
         top:"0px",
         left:"0px",
-    }
+    };
+
+    const mmap={
+        height:((window.outerHeight-40)+'px'),
+        width:(window.outerWidth+'px'),
+        display:"none",
+        position:"fixed",
+        left:"0px",
+        top:"40px",
+        overFlow:"hidden",
+        margin:"0 auto",
+        background:"#BBFAFA",
+        zIndex:1999,
+    };
 
     return (
         <Row>
-            <div style={cmap} id="exit_con">
+            <div style={cmap} id={config.exit}>
                 <span onClick={() => {self.history()}}>H</span> | 
                 <span onClick={() => {self.exitApp()}}> C</span>
             </div>
-            <div style={hmap} id="nav_con"></div>
-            <Col lg={12} xs={12} id="app_container" style={amap}>
+            <div style={hmap} id={config.nav}></div>
+            <Col lg={12} xs={12} id={config.app} style={amap}>
             </Col>
-            <Col lg={12} xs={12} style={fmap} id="footer_con">
+            <Col lg={12} xs={12} id={config.dialog} style={mmap}></Col>
+            <Col lg={12} xs={12} style={fmap} id={config.foot}>
                 <p> cApp on {props.block} , owner :<br />{props.owner}</p>
             </Col>
         </Row>

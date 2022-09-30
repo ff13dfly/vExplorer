@@ -42,9 +42,10 @@ const self={
         if(!anchor) return ck && ck(anchor,'');
         search(anchor, (res)=>{
             if(!res || (!res.owner)) return ck && ck(anchor,'');
-            if(res.raw) return ck && ck(anchor,res.raw);
-            viewer(block===0?res.blocknumber:block,anchor,res.owner,(rs)=>{
-                ck && ck(anchor,rs.raw);
+            if(!res.empty) return ck && ck(anchor,res.data);
+            viewer(anchor,block===0?res.block:block,res.owner,(rs)=>{
+                console.log(rs);
+                ck && ck(anchor,rs.data);
             });
         });
     },
@@ -234,7 +235,7 @@ const self={
         let failed={};
 
         const ods=self.mergeOrder(order);
-        console.log(`Plain lib array: ${JSON.stringify(ods)}`);
+        //console.log(`Plain lib array: ${JSON.stringify(ods)}`);
         for(let i=0;i<ods.length;i++){
             const row=ods[i];
             if(done[row]) continue;
@@ -253,12 +254,11 @@ const self={
 }
 
 const Loader =(list,RPC,ck)=>{
-    console.log(`Load list : ${JSON.stringify(list)}`);
+    //console.log(`Load list : ${JSON.stringify(list)}`);
     viewer=RPC.viewer;
     search=RPC.search;
     self.getLibs(list,(dt,order)=>{                
         const code=self.regroupCode(dt,order);
-        //console.log(code);
         ck && ck(code);
     });
 };
