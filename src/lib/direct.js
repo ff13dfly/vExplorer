@@ -19,7 +19,10 @@ const self = {
 		anchor = anchor.toLocaleLowerCase();
 		wsAPI.query.anchor.anchorOwner(anchor, (res) =>{
 			const result = { owner: null, block: 0, name: null,cost:0,target:null, data: {}, empty: true };
-			if (res.isEmpty) return ck && ck(result);
+			if (res.isEmpty){
+				//console.log(`[function Latest]: ${anchor} empty`);
+				return ck && ck(result);
+			} 
 			const owner = res.value[0].toHuman();
 			const block = res.value[1].words[0];
 			self.target(anchor,block,ck,owner);
@@ -29,17 +32,24 @@ const self = {
 		self.target(anchor,block,ck,owner);
 	},
 	target:(anchor,block,ck,owner)=>{
+		//console.log(`[function Target]: ${anchor} on ${block}, owner:${owner}`);
 		anchor = anchor.toLocaleLowerCase();
 		if (anchor.substr(0, 2).toLowerCase() === '0x') {
 			anchor = tools.decodeUTF8(anchor);
 		}
-
-		let unlist = null;
 		const result = { owner: owner, block:block, name: anchor,cost:0,target:null,data: {}, empty: true };
-		if(!owner) result.owner=null;
+		if(owner===null || owner===undefined){
+			return wsAPI.query.anchor.anchorOwner(anchor, (res) =>{
+				if (res.isEmpty) return ck && ck(result);
+				const own=res.value[0].toHuman();
+				self.target(anchor,block,ck,own);
+			});
+		}
+		
+		let unlist = null;
 		wsAPI.rpc.chain.getBlockHash(result.block, (res) => {
 			const hash = res.toHex();
-			if (!hash) return ck && ck(false);
+			if (!hash) return ck && ck(result);
 			wsAPI.rpc.chain.getBlock(hash).then((dt) => {
 				if (dt.block.extrinsics.length === 1) return ck && ck(result);
 				const exs = self.filter(dt, 'setAnchor');
@@ -58,22 +68,20 @@ const self = {
 					if (data.protocol) data.protocol = JSON.parse(data.protocol);
 					if (data.protocol.type === "data" && data.protocol.format === "JSON") data.raw = JSON.parse(data.raw);
 
-					//console.log(data);
 					result.data = data;
 				}
 				result.empty = false;
-				ck && ck(result);
-			});
-		});
 
-		wsAPI.query.anchor.sellList(anchor, (dt) => {
-			unlist();
-			if (dt.value.isEmpty) return ck && ck(result);
-			result.cost = dt.value[1].words[0];		//selling cost
-			result.target=dt.value[2].words[0];		//selling target 
-			ck && ck(result);
-		}).then((uu) => {
-			unlist = uu;
+				wsAPI.query.anchor.sellList(anchor, (dt) => {
+					unlist();
+					if (dt.value.isEmpty) return ck && ck(result);
+					result.cost = dt.value[1].words[0];		//selling cost
+					result.target=dt.value[2].words[0];		//selling target 
+					return ck && ck(result);
+				}).then((uu) => {
+					unlist = uu;
+				});
+			});
 		});
 	},
 	search: (anchor, ck) => {
@@ -123,32 +131,38 @@ const self = {
 		let map={};
 		for (let i = 0; i < list.length; i++) {
 			const row = list[i];
+			//console.log('Before calling:'+count);
 			if (typeof (row) == 'string') {
 				//console.log(`Get latest anchor of ${row}`);
 				self.latest(row,(data)=>{
 					const kk=row;
 					map[kk]=data;
 					count++;
+					//console.log('Latest call:'+count);
 					if(count===len) return ck && ck(self.groupMulti(list,map));
 				});
 			} else {
 				//console.log(`Get target anchor of ${row[0]} on ${row[1]}`);
 				self.target(row[0],row[1],(data)=>{
+					//console.log(JSON.stringify(data));
 					const kk=row[0]+'_'+row[1];
 					map[kk]=data;
 					count++;
+					//console.log('Target call:'+count);
 					if(count===len) return ck && ck(self.groupMulti(list,map));
 				});
 			}
 		}
 	},
 	groupMulti:(list,map)=>{
+		//console.log(JSON.stringify(map));
 		const arr=[];
 		for (let i = 0; i < list.length; i++) {
 			const row = list[i];
 			const kk=(typeof (row) == 'string')?row:(row[0]+'_'+row[1]);
 			arr.push(map[kk]);
 		}
+		
 		return arr;
 	},
 	history: (anchor, ck, limit) => {

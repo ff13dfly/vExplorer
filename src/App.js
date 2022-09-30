@@ -425,9 +425,17 @@ function App(props) {
         },
         multi:()=>{
             //console.log("test multi anchor");
-            const ans=["fNews","test","中文",["dddd",115],"hello"];
+            const ans=["fNews","ccc","test","中文",["ccc",2765],"hello","bbc","ccc"];
+            //const ans=["test","ccc","test","中文","abc","hello","bbc","ccc"];
+            //const ans=["test","test","test","test","test","test","ccc","test"];
+            //32 target
+            //const ans=[["ccc",2765],["ccc",2765],["ccc",2765],["ccc",2765],["ccc",2765],["ccc",2765],["ccc",2765],["ccc",2765]];
+            //const ans=[["ccc",1],["ccc",1],["ccc",1],["ccc",1],["ccc",2],["ccc",3],["ccc",4],["ccc",5]];
+            
             console.log(ans);
             RPC.common.multi(ans,(list)=>{
+                //console.log(list);
+                //console.log(JSON.stringify(list))
                 console.log(list);
             });
         },
