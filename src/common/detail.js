@@ -1,10 +1,11 @@
 
-import { Row, Col,Container } from 'react-bootstrap';
+import { Row, Col } from 'react-bootstrap';
 
 import Data from '../preter/data';
 import NFT from '../preter/NFT';
 import AnchorApp from '../preter/app';
 import Creation from '../preter/creation';
+import History from './history';
 
 function Detail(props) {
 
@@ -41,6 +42,9 @@ function Detail(props) {
   return (
       <Row>
         <Col lg = { 12 } xs = { 12 }>{dom}</Col>
+        <Col lg = { 12 } xs = { 12 }>
+          <History anchor={name}/>
+        </Col>
       </Row>
   );
 }

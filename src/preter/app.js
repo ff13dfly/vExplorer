@@ -195,18 +195,19 @@ function AnchorApp(props) {
         margin:"0 auto",
         padding:"0px 0px 0px 0px",
         marginBottom:"6px",
-        marginRight:"9px",
-        opacity:0.4,
-    }
+        marginRight:"8px",
+        opacity:0.5,
+    };
+
     const icmap={
         width:"24px",
         height:"24px",
         margin:"0 auto",
         padding:"0px 0px 0px 0px",
         marginBottom:"6px",
-        marginLeft:"9px",
-        opacity:0.4,
-    }
+        marginLeft:"8px",
+        opacity:0.5,
+    };
 
     const dvmap={
         color:"#EEEEEE",
@@ -216,7 +217,7 @@ function AnchorApp(props) {
         width:"auto",
         margin:"-10px 0px 10px 0px",
         padding:"0px 0px 0px 0px",
-    }
+    };
 
     //float operation button container
     const cmap={
@@ -239,11 +240,11 @@ function AnchorApp(props) {
         <Row>
             <div style={cmap} id={config.exit}>
                 <span onClick={() => {self.history()}}>
-                    <img style={ihmap} src="chart.png" />
+                    <img style={ihmap} src="setting.svg" />
                 </span>
                 <span style={dvmap}>|</span>
                 <span onClick={() => {self.exitApp()}}>
-                    <img style={icmap} src="circle.png" />
+                    <img style={icmap} src="close.svg" />
                 </span>
             </div>
             <div style={hmap} id={config.nav}></div>

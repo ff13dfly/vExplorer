@@ -15,9 +15,7 @@ const self={
 			//console.log(JSON.stringify(config));
 			try {
 				const provider = new WsProvider(config.endpoint);
-
 				ApiPromise.create({ provider: provider }).then((api) => {
-					//console.log('Linked...');
 					wsAPI = api;
 					ck && ck(true);
 				});
