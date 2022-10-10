@@ -43,7 +43,7 @@ function Detail(props) {
       <Row>
         <Col lg = { 12 } xs = { 12 }>{dom}</Col>
         <Col lg = { 12 } xs = { 12 }>
-          <History anchor={name}/>
+          <History anchor={name} protocol={protocol}/>
         </Col>
       </Row>
   );

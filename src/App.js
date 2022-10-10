@@ -477,7 +477,7 @@ function App(props) {
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="me-auto" >
                         <Nav.Link href="#home" onClick={self.router} > Home </Nav.Link>
-                        <Nav.Link href="#anchor" onClick={self.router} > Anchors </Nav.Link>
+                        {/* <Nav.Link href="#anchor" onClick={self.router} > Anchors </Nav.Link> */}
                         <Nav.Link href="#setting" onClick={self.router} > Setting </Nav.Link>
                         <Nav.Link href="#account" onClick={self.router}> My </Nav.Link>
                     </Nav>
